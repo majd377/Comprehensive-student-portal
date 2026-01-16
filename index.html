@@ -355,6 +355,10 @@
             .sidebar { transform: translateX(100%); }
             .sidebar.open { transform: translateX(0); }
             .main-content { margin-right: 0; padding: 15px; }
+            .data-card .data-header { flex-direction: column; align-items: flex-start; gap:8px; }
+            .data-card .data-header h3 { font-size: 1.05rem; }
+            .session-info { font-size: 0.82rem; margin-top:4px; }
+            .data-card .btn-link { padding: 6px 10px; font-size: 0.85rem; }
         }
 
         @keyframes fadeIn {
@@ -432,13 +436,15 @@
         <div id="loginModal" class="modal-overlay">
             <div class="modal-box">
                 <h3>تسجيل دخول المسؤول</h3>
-                <input type="text" id="usernameInput" class="modal-input" placeholder="اسم المستخدم">
-                <input type="password" id="passwordInput" class="modal-input" placeholder="كلمة المرور">
-                <p id="loginError" style="color:red; font-size:0.8rem; display:none;">بيانات الدخول غير صحيحة</p>
-                <div class="modal-btns">
-                    <button class="btn-cancel" onclick="closeLoginModal()">إلغاء</button>
-                    <button class="btn-login" onclick="checkLogin()">دخول</button>
-                </div>
+                <form id="adminLoginForm" autocomplete="on" onsubmit="checkLogin(event)">
+                    <input type="text" id="usernameInput" name="username" class="modal-input" autocomplete="username" placeholder="اسم المستخدم">
+                    <input type="password" id="passwordInput" name="password" class="modal-input" autocomplete="current-password" placeholder="كلمة المرور">
+                    <p id="loginError" style="color:red; font-size:0.8rem; display:none;">بيانات الدخول غير صحيحة</p>
+                    <div class="modal-btns">
+                        <button type="button" class="btn-cancel" onclick="closeLoginModal()">إلغاء</button>
+                        <button type="submit" class="btn-login">دخول</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -584,6 +590,7 @@
                 <h4>إضافة عضو فريق تطوير جديد</h4>
                 <input type="text" id="new-team-name" class="editable-input" placeholder="الاسم الكامل" style="margin-bottom: 10px;">
                 <input type="text" id="new-team-role" class="editable-input" placeholder="الدور / التخصص" style="margin-bottom: 10px;">
+                <textarea id="new-team-bio" class="editable-textarea" placeholder="وصف العضو أو السيرة الذاتية..." style="min-height: 60px; margin-bottom: 10px;"></textarea>
                 <input type="text" id="new-team-whatsapp" class="editable-input" placeholder="رقم الواتساب">
                 <button class="btn-sm btn-add" onclick="addTeamMember()">إضافة عضو</button>
             </div>
@@ -638,8 +645,16 @@
                 { id: 2, title: "مكتبة الموارد التعليمية", url: "#" }
             ],
             team: [
-                { id: 1, name: "أحمد محمد", role: "مدير الموقع", whatsapp: "0790000001" },
-                { id: 2, name: "ليلى علي", role: "مصممة واجهات", whatsapp: "0790000002" }
+                { id: 1, name: "أحمد محمد", role: "مدير الموقع", bio: "مدير المشروع والتطوير العام", whatsapp: "0790000001" },
+                { id: 2, name: "ليلى علي", role: "مصممة واجهات", bio: "مسؤولة تصميم الواجهات والتجربة", whatsapp: "0790000002" }
+            ],
+            books: [
+                { id: 1, title: "كتاب الرياضيات - الفصل الأول", link: "#" },
+                { id: 2, title: "كتاب الفيزياء - الفصل الأول", link: "#" }
+            ],
+            packages: [
+                { id: 1, title: "رزمة شاملة للفصل الأول", link: "#" },
+                { id: 2, title: "رزمة الاختبارات النهائية", link: "#" }
             ]
         };
 
@@ -649,22 +664,62 @@
             if(!defaultData.assignments[i]) defaultData.assignments[i] = [];
             if(!defaultData.liveLinks[i]) defaultData.liveLinks[i] = {};
             
-            defaultData.subjects.forEach(sub => {
-                defaultData.progress[i][sub] = { current: 1, total: 20 };
-                defaultData.liveLinks[i][sub] = ""; 
-            });
+                defaultData.subjects.forEach(sub => {
+                    defaultData.progress[i][sub] = { current: 1, total: 20 };
+                    defaultData.liveLinks[i][sub] = { link: "", from: "", to: "" };
+                });
         }
 
-        let appData = JSON.parse(localStorage.getItem('collegeAppData')) || defaultData;
-        if(!appData.subjects) appData = defaultData; // Fallback
+        // Normalize appData to ensure required structures exist
+        function normalizeAppData(data) {
+            if(!data) return defaultData;
+            // basic fallbacks
+            if(!data.sections) data.sections = defaultData.sections;
+            if(!data.subjects) data.subjects = defaultData.subjects.slice();
+            if(!data.progress) data.progress = {};
+            if(!data.assignments) data.assignments = {};
+            if(!data.liveLinks) data.liveLinks = {};
+            if(!data.support) data.support = defaultData.support.slice();
+            if(!data.summaries) data.summaries = defaultData.summaries.slice();
+            if(!data.liveLinks) data.liveLinks = {};
+            if(!data.news) data.news = defaultData.news.slice();
+            if(!data.importantLinks) data.importantLinks = defaultData.importantLinks.slice();
+            if(!data.team) data.team = defaultData.team.slice();
+            if(!data.books) data.books = defaultData.books.slice();
+            if(!data.packages) data.packages = defaultData.packages.slice();
+
+            // ensure team members have bio
+            data.team.forEach(m => { if(!m.bio) m.bio = ''; });
+
+            // ensure per-section structures
+            for (let i = 1; i <= data.sections; i++) {
+                if(!data.progress[i]) data.progress[i] = {};
+                if(!data.assignments[i]) data.assignments[i] = [];
+                if(!data.liveLinks[i]) data.liveLinks[i] = {};
+                data.subjects.forEach(sub => {
+                    if(!data.progress[i][sub]) data.progress[i][sub] = { current: 1, total: 20 };
+                    // normalize liveLinks entry to object with link/from/to
+                    if(!data.liveLinks[i][sub] || typeof data.liveLinks[i][sub] !== 'object') data.liveLinks[i][sub] = { link: "", from: "", to: "" };
+                });
+            }
+
+            return data;
+        }
+
+        let appData = normalizeAppData(JSON.parse(localStorage.getItem('collegeAppData')) || defaultData);
 
         let currentView = 'home';
         let selectedSection = 1;
         let isEditMode = false;
+        let isSyncingFromFirebase = false; // علم لمنع recursion
+        let lastLocalSave = 0; // طابع زمني لآخر حفظ محلي
 
         // --- استبدال دوال الحفظ والتحميل بـ Firebase ---
         // حفظ البيانات في Firebase
         function saveData() {
+            // ضع طابعًا زمنيًا لتمييز الحفظ المحلي عن تحديثات المزامنة
+            appData.__updated = Date.now();
+            lastLocalSave = appData.__updated;
             db.ref('appData').set(appData, (error) => {
                 if (error) {
                     alert('حدث خطأ أثناء الحفظ!');
@@ -674,14 +729,24 @@
 
         // تحميل البيانات من Firebase عند أي تغيير
         db.ref('appData').on('value', (snapshot) => {
+            isSyncingFromFirebase = true;
             if (snapshot.exists()) {
-                appData = snapshot.val();
-                render();
+                const data = snapshot.val();
+                // إذا كان التحديث مطابقًا لآخر حفظ محلي، نقوم بالتحديث لكن نتجنب إجراءات إضافية
+                if (data.__updated && data.__updated === lastLocalSave) {
+                    appData = normalizeAppData(data);
+                    render();
+                    isSyncingFromFirebase = false;
+                    return;
+                }
+                appData = normalizeAppData(data);
             } else {
                 // إذا لم توجد بيانات، استخدم البيانات الافتراضية
-                appData = defaultData;
+                appData = normalizeAppData(defaultData);
                 saveData();
             }
+            render();
+            isSyncingFromFirebase = false;
         });
 
         // عند أول تحميل للصفحة، إذا لم توجد بيانات في Firebase، احفظ البيانات الافتراضية
@@ -709,13 +774,15 @@
             document.getElementById('loginModal').style.display = 'none';
         }
 
-        function checkLogin() {
+        function checkLogin(e) {
+            if(e && e.preventDefault) e.preventDefault();
             const user = document.getElementById('usernameInput').value;
             const pass = document.getElementById('passwordInput').value;
 
             if (user === ADMIN_USER && pass === ADMIN_PASS) {
                 closeLoginModal(); // أغلق المودال فوراً
                 toggleEditMode(true);
+                // If browser offered to save credentials, it will do so after a successful form submit.
             } else {
                 document.getElementById('loginError').style.display = 'block';
             }
@@ -780,6 +847,13 @@
             } else {
                 showSection('home');
             }
+        }
+
+        // --- دالة تعيين الشعبة المختارة ---
+        function setSection(sectionNum) {
+            selectedSection = sectionNum;
+            renderSectionSelectors();
+            render();
         }
 
         // دعم زر الرجوع في الجوال (مثلث الرجوع)
@@ -862,6 +936,7 @@
             if(!appData.progress[selectedSection][subject]) appData.progress[selectedSection][subject] = {};
             appData.progress[selectedSection][subject][field] = parseInt(value);
             saveData();
+            render();
         }
 
         function renderAssignments() {
@@ -888,20 +963,26 @@
         }
 
         function addAssignment() {
-            const input = document.getElementById('new-assignment-text');
-            if(!input.value) return;
-            if(!appData.assignments[selectedSection]) appData.assignments[selectedSection] = [];
-            appData.assignments[selectedSection].push({ text: input.value, done: false });
-            input.value = '';
-            saveData();
+            const text = document.getElementById('new-assignment-text').value;
+            console.log('addAssignment called, section=', selectedSection, 'text=', text);
+            if(text) {
+                if(!appData.assignments[selectedSection]) appData.assignments[selectedSection] = [];
+                appData.assignments[selectedSection].push({ id: Date.now(), text: text, done: false });
+                document.getElementById('new-assignment-text').value = '';
+                saveData();
+                render();
+                // تحديث سريع لقائمة الواجبات الحالية
+                try { renderAssignments(); } catch(e) { console.warn('renderAssignments error', e); }
+            }
         }
 
         function toggleTask(index) {
             appData.assignments[selectedSection][index].done = !appData.assignments[selectedSection][index].done;
             saveData();
+            render();
         }
-        function updateTaskText(index, val) { appData.assignments[selectedSection][index].text = val; saveData(); }
-        function deleteTask(index) { if(confirm('هل أنت متأكد من حذف هذا الواجب؟')) { appData.assignments[selectedSection].splice(index, 1); saveData(); } }
+        function updateTaskText(index, val) { appData.assignments[selectedSection][index].text = val; saveData(); render(); }
+        function deleteTask(index) { if(confirm('هل أنت متأكد من حذف هذا الواجب؟')) { appData.assignments[selectedSection].splice(index, 1); saveData(); render(); } }
 
         function renderSupport() {
             const container = document.getElementById('support-list');
@@ -932,10 +1013,17 @@
             const name = document.getElementById('new-support-name').value;
             const role = document.getElementById('new-support-role').value;
             const phone = document.getElementById('new-support-num').value;
-            if(name && phone) { appData.support.push({ name, role, phone }); saveData(); document.getElementById('new-support-name').value=''; document.getElementById('new-support-role').value=''; document.getElementById('new-support-num').value=''; }
+            if(name && phone) { 
+                appData.support.push({ id: Date.now(), name, role, phone }); 
+                document.getElementById('new-support-name').value=''; 
+                document.getElementById('new-support-role').value=''; 
+                document.getElementById('new-support-num').value=''; 
+                saveData();
+                render();
+            }
         }
-        function updateSupport(index, key, val) { appData.support[index][key] = val; saveData(); }
-        function deleteSupport(index) { if(confirm('حذف جهة الاتصال؟')) { appData.support.splice(index, 1); saveData(); } }
+        function updateSupport(index, key, val) { appData.support[index][key] = val; saveData(); render(); }
+        function deleteSupport(index) { if(confirm('حذف جهة الاتصال؟')) { appData.support.splice(index, 1); saveData(); render(); } }
 
         function renderSummaries() {
             const container = document.getElementById('summaries-list');
@@ -962,36 +1050,110 @@
         function addSummary() {
             const title = document.getElementById('new-summ-title').value;
             const link = document.getElementById('new-summ-link').value;
-            if(title && link) { appData.summaries.push({ title, link }); saveData(); document.getElementById('new-summ-title').value=''; document.getElementById('new-summ-link').value=''; }
+            if(title && link) { 
+                appData.summaries.push({ id: Date.now(), title, link }); 
+                document.getElementById('new-summ-title').value=''; 
+                document.getElementById('new-summ-link').value=''; 
+                saveData();
+                render();
+            }
         }
-        function updateSummary(index, key, val) { appData.summaries[index][key] = val; saveData(); }
-        function deleteSummary(index) { if(confirm('حذف الملف؟')) { appData.summaries.splice(index, 1); saveData(); } }
+        function updateSummary(index, key, val) { appData.summaries[index][key] = val; saveData(); render(); }
+        function deleteSummary(index) { if(confirm('حذف الملف؟')) { appData.summaries.splice(index, 1); saveData(); render(); } }
 
         function renderLiveLinks() {
             const container = document.getElementById('live-list');
             container.innerHTML = '';
             const links = appData.liveLinks[selectedSection] || {};
+            // Add quick controls: add new subject
             appData.subjects.forEach(sub => {
-                const link = links[sub] || "";
+                const entry = links[sub] && typeof links[sub] === 'object' ? links[sub] : { link: '', from: '', to: '' };
                 const div = document.createElement('div');
                 div.className = 'data-card';
                 div.innerHTML = `
                     <div class="data-header">
                         <h3>${sub}</h3>
-                        ${link ? `<a href="${link}" target="_blank" class="btn-link editable-value">دخول الحصة 🔴</a>` : '<span class="editable-value" style="color:gray">لا يوجد رابط</span>'}
+                        ${entry.link ? `<a href="${entry.link}" target="_blank" class="btn-link editable-value">دخول الحصة 🔴</a>` : '<span class="editable-value" style="color:gray">لا يوجد رابط</span>'}
+                        <p class="editable-value session-info">موعد الحصة: ${entry.from || '--'} إلى ${entry.to || '--'}</p>
                     </div>
                     <div class="editable-field">
                         <label>رابط الحصة (Zoom/Teams):</label>
-                        <input type="text" class="editable-input" value="${link}" placeholder="الصق الرابط هنا" onchange="updateLiveLink('${sub}', this.value)">
+                        <input type="text" class="editable-input" value="${entry.link}" placeholder="الصق الرابط هنا" onchange="updateLiveLink('${sub}', 'link', this.value)">
+                        <div style="display:flex; gap:10px; margin-top:8px;">
+                            <div style="flex:1">
+                                <label>من:</label>
+                                <input type="time" class="editable-input" value="${entry.from}" onchange="updateLiveLink('${sub}', 'from', this.value)">
+                            </div>
+                            <div style="flex:1">
+                                <label>إلى:</label>
+                                <input type="time" class="editable-input" value="${entry.to}" onchange="updateLiveLink('${sub}', 'to', this.value)">
+                            </div>
+                        </div>
+                        <div style="margin-top:8px; display:flex; gap:8px;">
+                            <button class="btn-sm btn-delete" onclick="deleteLiveLink('${sub}')">حذف رابط الشعبة</button>
+                            <button class="btn-sm btn-delete" onclick="deleteSubject('${sub}')">حذف المادة نهائياً</button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(div);
             });
+            // add-new-container for adding a new subject in live-links
+            const addBox = document.createElement('div');
+            addBox.className = 'add-new-container';
+            addBox.innerHTML = `
+                <h4>إضافة مادة جديدة</h4>
+                <input type="text" id="new-subject-name" class="editable-input" placeholder="اسم المادة الجديدة" style="margin-bottom:8px;">
+                <button class="btn-sm btn-add" onclick="addSubject()">إضافة مادة</button>
+            `;
+            container.appendChild(addBox);
         }
-        function updateLiveLink(subject, val) {
+        function updateLiveLink(subject, key, val) {
             if(!appData.liveLinks[selectedSection]) appData.liveLinks[selectedSection] = {};
-            appData.liveLinks[selectedSection][subject] = val;
+            let cur = appData.liveLinks[selectedSection][subject];
+            if(!cur || typeof cur !== 'object') cur = { link: '', from: '', to: '' };
+            cur[key] = val;
+            appData.liveLinks[selectedSection][subject] = cur;
             saveData();
+            render();
+        }
+
+        function deleteLiveLink(subject) {
+            if(!appData.liveLinks[selectedSection]) appData.liveLinks[selectedSection] = {};
+            if(confirm('هل تريد حذف رابط هذه المادة في الشعبة الحالية؟')) {
+                appData.liveLinks[selectedSection][subject] = { link: '', from: '', to: '' };
+                saveData();
+                render();
+            }
+        }
+
+        function deleteSubject(subject) {
+            if(!confirm('هل أنت متأكد من حذف المادة نهائياً من جميع الشعب؟ هذه الخطوة ستحذف التقدم والروابط الخاصة بالمادة.')) return;
+            const idx = appData.subjects.indexOf(subject);
+            if(idx > -1) appData.subjects.splice(idx, 1);
+            // remove from progress and liveLinks across sections
+            for(let i=1;i<=appData.sections;i++){
+                if(appData.progress && appData.progress[i]) delete appData.progress[i][subject];
+                if(appData.liveLinks && appData.liveLinks[i]) delete appData.liveLinks[i][subject];
+            }
+            saveData();
+            render();
+        }
+
+        function addSubject() {
+            const name = document.getElementById('new-subject-name').value.trim();
+            if(!name) return;
+            if(appData.subjects.includes(name)) { alert('المادة موجودة مسبقاً'); return; }
+            appData.subjects.push(name);
+            // initialize progress and liveLinks for all sections
+            for(let i=1;i<=appData.sections;i++){
+                if(!appData.progress[i]) appData.progress[i] = {};
+                appData.progress[i][name] = { current: 1, total: 20 };
+                if(!appData.liveLinks[i]) appData.liveLinks[i] = {};
+                appData.liveLinks[i][name] = { link: '', from: '', to: '' };
+            }
+            document.getElementById('new-subject-name').value = '';
+            saveData();
+            render();
         }
 
         // --- NEWS FUNCTIONS ---
@@ -1026,13 +1188,14 @@
             const content = document.getElementById('new-news-content').value;
             if(title && content) {
                 appData.news.push({ id: Date.now(), title, content });
-                saveData();
                 document.getElementById('new-news-title').value = '';
                 document.getElementById('new-news-content').value = '';
+                saveData();
+                render();
             }
         }
-        function updateNews(index, key, val) { appData.news[index][key] = val; saveData(); }
-        function deleteNews(index) { if(confirm('حذف هذا الخبر؟')) { appData.news.splice(index, 1); saveData(); } }
+        function updateNews(index, key, val) { appData.news[index][key] = val; saveData(); render(); }
+        function deleteNews(index) { if(confirm('حذف هذا الخبر؟')) { appData.news.splice(index, 1); saveData(); render(); } }
 
         // --- IMPORTANT LINKS FUNCTIONS ---
         function renderImportantLinks() {
@@ -1066,13 +1229,14 @@
             const url = document.getElementById('new-link-url').value;
             if(title && url) {
                 appData.importantLinks.push({ id: Date.now(), title, url });
-                saveData();
                 document.getElementById('new-link-title').value = '';
                 document.getElementById('new-link-url').value = '';
+                saveData();
+                render();
             }
         }
-        function updateImportantLink(index, key, val) { appData.importantLinks[index][key] = val; saveData(); }
-        function deleteImportantLink(index) { if(confirm('حذف هذا الرابط؟')) { appData.importantLinks.splice(index, 1); saveData(); } }
+        function updateImportantLink(index, key, val) { appData.importantLinks[index][key] = val; saveData(); render(); }
+        function deleteImportantLink(index) { if(confirm('حذف هذا الرابط؟')) { appData.importantLinks.splice(index, 1); saveData(); render(); } }
 
         // --- TEAM FUNCTIONS ---
         function renderTeam() {
@@ -1092,6 +1256,8 @@
                             <input class="editable-field editable-input" value="${member.name}" onchange="updateTeam(${index}, 'name', this.value)">
                             <p class="editable-value" style="color:gray; font-size:0.9rem">${member.role}</p>
                             <input class="editable-field editable-input" value="${member.role}" onchange="updateTeam(${index}, 'role', this.value)">
+                            <p class="editable-value" style="color:gray; font-size:0.85rem; margin-top:5px;">${member.bio || 'لا توجد معلومات'}</p>
+                            <textarea class="editable-field editable-textarea" onchange="updateTeam(${index}, 'bio', this.value)" style="min-height: 50px; margin-top: 5px;">${member.bio || ''}</textarea>
                         </div>
                         <div style="text-align:left;">
                             <a href="https://wa.me/${member.whatsapp}" target="_blank" class="btn-link editable-value">واتس 💬</a>
@@ -1106,17 +1272,23 @@
         function addTeamMember() {
             const name = document.getElementById('new-team-name').value;
             const role = document.getElementById('new-team-role').value;
+            const bio = document.getElementById('new-team-bio').value;
             const whatsapp = document.getElementById('new-team-whatsapp').value;
+            console.log('addTeamMember called, name=', name, 'role=', role, 'whatsapp=', whatsapp);
             if(name && whatsapp) {
-                appData.team.push({ id: Date.now(), name, role, whatsapp });
-                saveData();
+                appData.team.push({ id: Date.now(), name, role, bio, whatsapp });
                 document.getElementById('new-team-name').value = '';
                 document.getElementById('new-team-role').value = '';
+                document.getElementById('new-team-bio').value = '';
                 document.getElementById('new-team-whatsapp').value = '';
+                saveData();
+                render();
+                // تحديث سريع لقائمة أعضاء الفريق
+                try { renderTeam(); } catch(e) { console.warn('renderTeam error', e); }
             }
         }
-        function updateTeam(index, key, val) { appData.team[index][key] = val; saveData(); }
-        function deleteTeamMember(index) { if(confirm('حذف عضو الفريق؟')) { appData.team.splice(index, 1); saveData(); } }
+        function updateTeam(index, key, val) { appData.team[index][key] = val; saveData(); render(); }
+        function deleteTeamMember(index) { if(confirm('حذف عضو الفريق؟')) { appData.team.splice(index, 1); saveData(); render(); } }
 
         // --- الكتب والرزم ---
         let booksPackagesType = 'books'; // 'books' or 'packages'
@@ -1159,19 +1331,28 @@
         function addBooksPackage() {
             const title = document.getElementById('new-books-packages-title').value;
             const link = document.getElementById('new-books-packages-link').value;
-            if (!title || !link) return;
-            const arr = booksPackagesType === 'books' ? appData.books : appData.packages;
-            arr.push({ id: Date.now(), title, link });
-            document.getElementById('new-books-packages-title').value = '';
-            document.getElementById('new-books-packages-link').value = '';
-            saveData();
-            renderBooksPackages();
+            console.log('addBooksPackage called, type=', booksPackagesType, 'title=', title, 'link=', link);
+            if(title && link) {
+                let arr = booksPackagesType === 'books' ? appData.books : appData.packages;
+                if(!arr) {
+                    if(booksPackagesType === 'books') appData.books = [];
+                    else appData.packages = [];
+                    arr = booksPackagesType === 'books' ? appData.books : appData.packages;
+                }
+                arr.push({ id: Date.now(), title, link });
+                document.getElementById('new-books-packages-title').value = '';
+                document.getElementById('new-books-packages-link').value = '';
+                saveData();
+                render();
+                try { renderBooksPackages(); } catch(e) { console.warn('renderBooksPackages error', e); }
+            }
         }
 
         function updateBooksPackage(index, key, val) {
             const arr = booksPackagesType === 'books' ? appData.books : appData.packages;
             arr[index][key] = val;
             saveData();
+            render();
             renderBooksPackages();
         }
 
@@ -1180,14 +1361,25 @@
                 const arr = booksPackagesType === 'books' ? appData.books : appData.packages;
                 arr.splice(index, 1);
                 saveData();
+                render();
                 renderBooksPackages();
             }
         }
 
         // عند تحميل الصفحة، إذا دخلت قسم الكتب والرزم، فعّل تبويب الكتب افتراضياً
         document.addEventListener('DOMContentLoaded', function() {
-            if (currentView === 'books-packages') switchBooksPackagesType('books');
+            switchBooksPackagesType('books');
+            render();
         });
+
+        // Ensure functions are reachable from inline onclick handlers (debugging helpers)
+        window.addAssignment = addAssignment;
+        window.addBooksPackage = addBooksPackage;
+        window.addTeamMember = addTeamMember;
+        window.addSupport = addSupport;
+        window.addSummary = addSummary;
+        window.addNews = addNews;
+        window.addImportantLink = addImportantLink;
 
         render();
     </script>
