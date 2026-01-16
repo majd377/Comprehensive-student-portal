@@ -50,6 +50,9 @@
             box-shadow: -2px 0 10px rgba(0,0,0,0.05);
             z-index: 100;
             transition: transform 0.3s ease;
+            overflow-y: auto; /* allow scrolling when items overflow */
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 140px; /* extra space so last items aren't hidden by floating UI */
         }
 
         .logo {
@@ -134,11 +137,17 @@
             background-color: var(--accent-color);
         }
 
-        /* Sections Grid (Home) */
+        /* Sections Grid (Home) - centered layout so partial rows are centered */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 250px));
+            justify-content: center;
             gap: 20px;
+        }
+
+        /* make dashboard responsive: allow fluid columns on small screens */
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
         }
 
         .feature-card {
@@ -365,6 +374,47 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* فريق التطوير: عرض الأعضاء جنب بعض (أفقي) مع تجاوب */
+        #team-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        /* تخصيص بطاقات الأعضاء داخل قائمة الفريق فقط: 3 أعمدة على الشاشات الكبيرة */
+        #team-list .data-card {
+            flex: 0 0 calc(33.333% - 10.66px);
+            min-width: 220px;
+        }
+
+        /* شاشات متوسطة: عمودين */
+        @media (max-width: 992px) {
+            #team-list .data-card { flex: 0 0 calc(50% - 10px); }
+        }
+
+        /* شاشات صغيرة: عمود واحد */
+        @media (max-width: 600px) {
+            #team-list .data-card { flex: 0 0 100%; }
+        }
+
+        /* روابط مهمة: عرض عنصرين جنب بعض ثم يكمل تحتهم */
+        #important-links-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        #important-links-list .data-card {
+            flex: 0 0 calc(50% - 8px);
+            min-width: 200px;
+        }
+        @media (max-width: 600px) {
+            #important-links-list .data-card { flex: 0 0 100%; }
+        }
     </style>
 </head>
 <body>
@@ -410,6 +460,14 @@
                     <path d="M8 3v4"></path>
                 </svg>
                 الكتب والرزم
+            </li>
+            <li class="nav-item" onclick="showSection('teachers')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><path d="M4 21v-2a4 4 0 0 1 3-3.87"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                أسماء الأساتذة
+            </li>
+            <li class="nav-item" onclick="showSection('group-links')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"></path></svg>
+                روابط المجموعات
             </li>
             <li class="nav-item" onclick="showSection('important-links')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
@@ -486,6 +544,16 @@
                     <h3>الكتب والرزم</h3>
                     <p>تحميل الكتب والرزم بسهولة</p>
                 </div>
+                <div class="feature-card" onclick="showSection('teachers')">
+                    <div class="feature-icon">👩‍🏫</div>
+                    <h3>أسماء الأساتذة</h3>
+                    <p>قائمة الأساتذة مقسمة حسب الشعب</p>
+                </div>
+                <div class="feature-card" onclick="showSection('group-links')">
+                    <div class="feature-icon">🧑‍🤝‍🧑</div>
+                    <h3>روابط المجموعات</h3>
+                    <p>روابط مجموعات الشُعب للدخول السريع</p>
+                </div>
                 <div class="feature-card" onclick="showSection('important-links')">
                     <div class="feature-icon">🌷</div>
                     <h3>روابط مهمة</h3>
@@ -496,6 +564,7 @@
                     <h3>فريق التطوير</h3>
                     <p>للتواصل معنا...</p>
                 </div>
+                
             </div>
         </div>
 
@@ -572,6 +641,31 @@
             </div>
         </div>
 
+        <div id="teachers" class="content-area">
+            <button class="btn-link" style="margin-bottom:15px;" onclick="goBack()" id="backBtn">⬅️ رجوع</button>
+            <div class="section-selector" id="teachers-sec-selector"></div>
+            <div id="teachers-list"></div>
+            <div class="add-new-container">
+                <h4>إضافة أستاذ للشعبة الحالية</h4>
+                <input type="text" id="new-teacher-name" class="editable-input" placeholder="الاسم الكامل" style="margin-bottom:10px;">
+                <input type="text" id="new-teacher-role" class="editable-input" placeholder="المادة / الدور" style="margin-bottom:10px;">
+                <input type="text" id="new-teacher-phone" class="editable-input" placeholder="رقم الهاتف" style="margin-bottom:10px;">
+                <button class="btn-sm btn-add" onclick="addTeacher()">إضافة أستاذ</button>
+            </div>
+        </div>
+
+        <div id="group-links" class="content-area">
+            <button class="btn-link" style="margin-bottom:15px;" onclick="goBack()" id="backBtn">⬅️ رجوع</button>
+            <div class="section-selector" id="group-sec-selector"></div>
+            <div id="group-links-list"></div>
+            <div class="add-new-container">
+                <h4>إضافة رابط مجموعة للشعبة الحالية</h4>
+                <input type="text" id="new-group-title" class="editable-input" placeholder="اسم المجموعة" style="margin-bottom:10px;">
+                <input type="text" id="new-group-url" class="editable-input" placeholder="الرابط (URL)" style="margin-bottom:10px;">
+                <button class="btn-sm btn-add" onclick="addGroupLink()">إضافة رابط</button>
+            </div>
+        </div>
+
         <div id="important-links" class="content-area">
             <button class="btn-link" style="margin-bottom:15px;" onclick="goBack()" id="backBtn">⬅️ رجوع</button>
             <div id="important-links-list"></div>
@@ -597,6 +691,8 @@
         </div>
 
     </main>
+
+    
 
     <script>
         // --- Firebase Config ---
@@ -656,6 +752,14 @@
                 { id: 1, title: "رزمة شاملة للفصل الأول", link: "#" },
                 { id: 2, title: "رزمة الاختبارات النهائية", link: "#" }
             ]
+            ,
+            // per-section teachers and group links (will be normalized)
+            teachers: {
+                // example: '1': [{ id:1, name:'أ. خالد', role:'رياضيات', phone:'079...'}]
+            },
+            groupLinks: {
+                // example: '1': [{ id:1, title:'مجموعة شعبة 1', url:'#' }]
+            }
         };
 
         // Initialize dummy data
@@ -687,6 +791,8 @@
             if(!data.team) data.team = defaultData.team.slice();
             if(!data.books) data.books = defaultData.books.slice();
             if(!data.packages) data.packages = defaultData.packages.slice();
+            if(!data.teachers) data.teachers = {};
+            if(!data.groupLinks) data.groupLinks = {};
 
             // ensure team members have bio
             data.team.forEach(m => { if(!m.bio) m.bio = ''; });
@@ -696,6 +802,8 @@
                 if(!data.progress[i]) data.progress[i] = {};
                 if(!data.assignments[i]) data.assignments[i] = [];
                 if(!data.liveLinks[i]) data.liveLinks[i] = {};
+                if(!data.teachers[i]) data.teachers[i] = [];
+                if(!data.groupLinks[i]) data.groupLinks[i] = [];
                 data.subjects.forEach(sub => {
                     if(!data.progress[i][sub]) data.progress[i][sub] = { current: 1, total: 20 };
                     // normalize liveLinks entry to object with link/from/to
@@ -833,6 +941,8 @@
                 'live-links': 'روابط الحصص',
                 'news': 'آخر الأخبار',
                 'books-packages': 'الكتب والرزم',
+                'teachers': 'أسماء الأساتذة',
+                'group-links': 'روابط المجموعات',
                 'important-links': 'روابط مهمة',
                 'about-team': 'فريق التطوير'
             };
@@ -871,6 +981,8 @@
             if(currentView === 'support') renderSupport();
             if(currentView === 'summaries') renderSummaries();
             if(currentView === 'live-links') renderLiveLinks();
+            if(currentView === 'teachers') renderTeachers();
+            if(currentView === 'group-links') renderGroupLinks();
             if(currentView === 'news') renderNews();
             if(currentView === 'books-packages') renderBooksPackages();
             if(currentView === 'important-links') renderImportantLinks();
@@ -885,6 +997,8 @@
 
         function renderSectionSelectors() {
             const ids = ['progress-sec-selector', 'assign-sec-selector', 'live-sec-selector'];
+            // add selectors for teachers and group-links as well
+            ids.push('teachers-sec-selector', 'group-sec-selector');
             ids.forEach(id => {
                 const container = document.getElementById(id);
                 if(!container) return;
@@ -1238,6 +1352,97 @@
         function updateImportantLink(index, key, val) { appData.importantLinks[index][key] = val; saveData(); render(); }
         function deleteImportantLink(index) { if(confirm('حذف هذا الرابط؟')) { appData.importantLinks.splice(index, 1); saveData(); render(); } }
 
+        // --- TEACHERS FUNCTIONS ---
+        function renderTeachers() {
+            const container = document.getElementById('teachers-list');
+            container.innerHTML = '';
+            const list = appData.teachers[selectedSection] || [];
+            if(!list || list.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-light); text-align:center;">لا يوجد أساتذة مسجلين لهذه الشعبة حالياً</p>';
+                return;
+            }
+            list.forEach((t, index) => {
+                const div = document.createElement('div');
+                div.className = 'data-card';
+                div.innerHTML = `
+                    <div class="data-header">
+                        <div>
+                            <h3 class="editable-value">${t.name}</h3>
+                            <input class="editable-field editable-input" value="${t.name}" onchange="updateTeacher(${index}, 'name', this.value)">
+                            <p class="editable-value" style="color:gray; font-size:0.9rem">${t.role || ''}</p>
+                            <input class="editable-field editable-input" value="${t.role || ''}" onchange="updateTeacher(${index}, 'role', this.value)">
+                            <p class="editable-value" style="color:gray; font-size:0.85rem; margin-top:5px;">${t.phone || ''}</p>
+                            <input class="editable-field editable-input" value="${t.phone || ''}" onchange="updateTeacher(${index}, 'phone', this.value)">
+                        </div>
+                        <div style="text-align:left;">
+                            ${t.phone ? `<a href="tel:${t.phone}" class="btn-link editable-value">اتصال</a>` : ''}
+                        </div>
+                    </div>
+                    <button class="btn-sm btn-delete" onclick="deleteTeacher(${index})">حذف</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+        function addTeacher() {
+            const name = document.getElementById('new-teacher-name').value.trim();
+            const role = document.getElementById('new-teacher-role').value.trim();
+            const phone = document.getElementById('new-teacher-phone').value.trim();
+            if(!name) return;
+            if(!appData.teachers[selectedSection]) appData.teachers[selectedSection] = [];
+            appData.teachers[selectedSection].push({ id: Date.now(), name, role, phone });
+            document.getElementById('new-teacher-name').value = '';
+            document.getElementById('new-teacher-role').value = '';
+            document.getElementById('new-teacher-phone').value = '';
+            saveData();
+            render();
+            try { renderTeachers(); } catch(e) { console.warn('renderTeachers error', e); }
+        }
+        function updateTeacher(index, key, val) { appData.teachers[selectedSection][index][key] = val; saveData(); render(); }
+        function deleteTeacher(index) { if(confirm('حذف هذا الأستاذ؟')) { appData.teachers[selectedSection].splice(index, 1); saveData(); render(); } }
+
+        // --- GROUP LINKS (روابط المجموعات) ---
+        function renderGroupLinks() {
+            const container = document.getElementById('group-links-list');
+            container.innerHTML = '';
+            const list = appData.groupLinks[selectedSection] || [];
+            if(!list || list.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-light); text-align:center;">لا توجد روابط للمجموعات لهذه الشعبة حالياً</p>';
+                return;
+            }
+            list.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'data-card';
+                div.innerHTML = `
+                    <div class="data-header">
+                        <div>
+                            <h3 class="editable-value">${item.title}</h3>
+                            <input class="editable-field editable-input" value="${item.title}" onchange="updateGroupLink(${index}, 'title', this.value)">
+                        </div>
+                        <a href="${item.url}" target="_blank" class="btn-link editable-value">فتح الرابط ↗️</a>
+                    </div>
+                    <div class="editable-field">
+                        <input class="editable-input" value="${item.url}" placeholder="الرابط" onchange="updateGroupLink(${index}, 'url', this.value)">
+                    </div>
+                    <button class="btn-sm btn-delete" onclick="deleteGroupLink(${index})">حذف</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+        function addGroupLink() {
+            const title = document.getElementById('new-group-title').value.trim();
+            const url = document.getElementById('new-group-url').value.trim();
+            if(!title || !url) return;
+            if(!appData.groupLinks[selectedSection]) appData.groupLinks[selectedSection] = [];
+            appData.groupLinks[selectedSection].push({ id: Date.now(), title, url });
+            document.getElementById('new-group-title').value = '';
+            document.getElementById('new-group-url').value = '';
+            saveData();
+            render();
+            try { renderGroupLinks(); } catch(e) { console.warn('renderGroupLinks error', e); }
+        }
+        function updateGroupLink(index, key, val) { appData.groupLinks[selectedSection][index][key] = val; saveData(); render(); }
+        function deleteGroupLink(index) { if(confirm('حذف هذا الرابط؟')) { appData.groupLinks[selectedSection].splice(index, 1); saveData(); render(); } }
+
         // --- TEAM FUNCTIONS ---
         function renderTeam() {
             const container = document.getElementById('team-list');
@@ -1380,6 +1585,10 @@
         window.addSummary = addSummary;
         window.addNews = addNews;
         window.addImportantLink = addImportantLink;
+        window.addTeacher = addTeacher;
+        window.addGroupLink = addGroupLink;
+
+        
 
         render();
     </script>
