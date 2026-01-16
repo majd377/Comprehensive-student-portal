@@ -6,7 +6,7 @@
     <!-- أضف قبل </head> -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <title>بوابة الطلاب الشاملة</title>
+    <title>عالَــم النًّــبـلاء</title>
     <style>
         :root {
             --primary-color: #000000;
@@ -38,7 +38,7 @@
 
         /* Sidebar Navigation */
         .sidebar {
-            width: 200px;
+            width: 260px;
             background-color: var(--card-bg);
             padding: 20px;
             display: flex;
@@ -63,6 +63,12 @@
             display: flex;
             align-items: center;
             gap: 5px;
+        }
+        .logo img.site-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
         }
 
         .nav-links {
@@ -421,7 +427,7 @@
 
     <nav class="sidebar" id="sidebar">
         <div class="logo">
-            <span>🎓</span> منصتي الدراسية
+            <span>🎓</span>عالَــم النًّــبـلاء
         </div>
         <ul class="nav-links">
             <li class="nav-item active" onclick="showSection('home')">
@@ -511,7 +517,7 @@
                 <div class="feature-card" onclick="showSection('live-links')">
                     <div class="feature-icon">🔗</div>
                     <h3>حصص اليوم</h3>
-                    <p>روابط مباشرة للزوم عبر الإنترنت</p>
+                    <p>روابط الحصص أول بأول</p>
                 </div>
                 <div class="feature-card" onclick="showSection('progress')">
                     <div class="feature-icon">📊</div>
@@ -577,10 +583,20 @@
         <div id="assignments" class="content-area">
             <button class="btn-link" style="margin-bottom:15px;" onclick="goBack()" id="backBtn">⬅️ رجوع</button>
             <div class="section-selector" id="assign-sec-selector"></div>
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+                <label style="color:var(--text-light);">عرض:</label>
+                <select id="assign-filter-mode" class="editable-input" style="width:160px;" onchange="renderAssignments()">
+                    <option value="all">كل الواجبات</option>
+                    <option value="date">حسب التاريخ</option>
+                </select>
+                <input type="date" id="assign-filter-date" class="editable-input" style="max-width:180px; display:none;" onchange="renderAssignments()">
+            </div>
             <div id="assignments-list"></div>
             <div class="add-new-container">
                 <h4>إضافة واجب جديد للشعبة الحالية</h4>
                 <input type="text" id="new-assignment-text" class="editable-input" placeholder="اكتب تفاصيل الواجب هنا...">
+                <label style="margin-top:8px; color:var(--text-light);">تاريخ الواجب (اختياري):</label>
+                <input type="date" id="new-assignment-date" class="editable-input" style="margin-bottom:8px;">
                 <button class="btn-sm btn-add" onclick="addAssignment()">إضافة واجب</button>
             </div>
         </div>
@@ -1019,9 +1035,14 @@
             const container = document.getElementById('progress-list');
             container.innerHTML = '';
             const sectionData = appData.progress[selectedSection] || {};
-            
-            appData.subjects.forEach(sub => {
-                const data = sectionData[sub] || { current: 0, total: 10 };
+            // Show only subjects that are present for this section (allow per-section removal)
+            const subjectsInSection = Object.keys(sectionData);
+            if(subjectsInSection.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-light); text-align:center;">لا توجد مواد مسجلة لهذه الشعبة حالياً.</p>';
+            }
+
+            subjectsInSection.forEach(sub => {
+                const data = sectionData[sub] || { current: 0, total: 10, lessonName: '' };
                 const percent = Math.min(100, Math.round((data.current / data.total) * 100));
 
                 const card = document.createElement('div');
@@ -1029,13 +1050,18 @@
                 card.innerHTML = `
                     <div class="data-header">
                         <h3>${sub}</h3>
-                        <div class="editable-value">درس ${data.current} من ${data.total}</div>
+                        <div class="editable-value">${data.lessonName && data.lessonName.trim() ? data.lessonName : `درس ${data.current} من ${data.total}`}</div>
                     </div>
                     <div class="editable-field">
-                        <label>الدرس الحالي:</label>
+                        <label>اسم الدرس الحالي (اختياري):</label>
+                        <input type="text" class="editable-input" value="${data.lessonName || ''}" onchange="updateProgress('${sub}', 'lessonName', this.value)">
+                        <label>الدرس الحالي (رقم):</label>
                         <input type="number" class="editable-input" value="${data.current}" onchange="updateProgress('${sub}', 'current', this.value)">
                         <label>إجمالي الدروس:</label>
                         <input type="number" class="editable-input" value="${data.total}" onchange="updateProgress('${sub}', 'total', this.value)">
+                        <div style="margin-top:8px; display:flex; gap:8px;">
+                            <button class="btn-sm btn-delete" onclick="removeSubjectFromSection('${sub}')">حذف المادة من الشعبة</button>
+                        </div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-bar" style="width: ${percent}%"></div>
@@ -1043,12 +1069,51 @@
                 `;
                 container.appendChild(card);
             });
+
+            // Add control to attach existing global subjects to this section
+            const addBox = document.createElement('div');
+            addBox.className = 'add-new-container';
+            // available subjects are those in appData.subjects not present in this section
+            const available = appData.subjects.filter(s => !subjectsInSection.includes(s));
+            let optionsHtml = '';
+            available.forEach(a => { optionsHtml += `<option value="${a}">${a}</option>`; });
+            addBox.innerHTML = `
+                <h4>إضافة مادة موجودة للشعبة الحالية</h4>
+                ${available.length === 0 ? '<p style="color:var(--text-light);">لا توجد مواد متاحة للإضافة.</p>' : `<select id="add-existing-subject-select" class="editable-input" style="margin-bottom:8px;">${optionsHtml}</select><button class="btn-sm btn-add" onclick="addExistingSubjectToSection()">أضف المادة للشعبة</button>`}
+            `;
+            container.appendChild(addBox);
         }
 
         function updateProgress(subject, field, value) {
             if(!appData.progress[selectedSection]) appData.progress[selectedSection] = {};
-            if(!appData.progress[selectedSection][subject]) appData.progress[selectedSection][subject] = {};
-            appData.progress[selectedSection][subject][field] = parseInt(value);
+            if(!appData.progress[selectedSection][subject]) appData.progress[selectedSection][subject] = { current: 0, total: 10, lessonName: '' };
+            if(field === 'lessonName') {
+                appData.progress[selectedSection][subject][field] = value;
+            } else {
+                appData.progress[selectedSection][subject][field] = parseInt(value) || 0;
+            }
+            saveData();
+            render();
+        }
+
+        function removeSubjectFromSection(subject) {
+            if(!confirm('هل تريد حذف هذه المادة من الشعبة الحالية؟ (سيتم إزالة التقدم والروابط لهذه الشعبة فقط)')) return;
+            if(appData.progress && appData.progress[selectedSection]) delete appData.progress[selectedSection][subject];
+            if(appData.liveLinks && appData.liveLinks[selectedSection]) delete appData.liveLinks[selectedSection][subject];
+            saveData();
+            render();
+        }
+
+        function addExistingSubjectToSection() {
+            const sel = document.getElementById('add-existing-subject-select');
+            if(!sel) return;
+            const name = sel.value;
+            if(!name) return;
+            if(!appData.progress[selectedSection]) appData.progress[selectedSection] = {};
+            if(appData.progress[selectedSection][name]) { alert('المادة موجودة بالفعل في هذه الشعبة'); return; }
+            appData.progress[selectedSection][name] = { current: 1, total: 20, lessonName: '' };
+            if(!appData.liveLinks[selectedSection]) appData.liveLinks[selectedSection] = {};
+            appData.liveLinks[selectedSection][name] = { link: '', from: '', to: '' };
             saveData();
             render();
         }
@@ -1056,8 +1121,31 @@
         function renderAssignments() {
             const container = document.getElementById('assignments-list');
             container.innerHTML = '';
-            const tasks = appData.assignments[selectedSection] || [];
-            
+            let tasks = appData.assignments[selectedSection] || [];
+
+            // filter controls
+            const modeEl = document.getElementById('assign-filter-mode');
+            const dateEl = document.getElementById('assign-filter-date');
+            const mode = modeEl ? modeEl.value : 'all';
+            if(mode === 'date') {
+                if(dateEl) {
+                    dateEl.style.display = '';
+                    const selDate = dateEl.value; // format YYYY-MM-DD
+                    if(selDate) {
+                        tasks = tasks.filter(t => {
+                            if(!t.date) return false;
+                            const d = new Date(t.date);
+                            const y = d.getFullYear();
+                            const m = String(d.getMonth()+1).padStart(2,'0');
+                            const day = String(d.getDate()).padStart(2,'0');
+                            return `${y}-${m}-${day}` === selDate;
+                        });
+                    }
+                }
+            } else {
+                if(dateEl) dateEl.style.display = 'none';
+            }
+
             if(tasks.length === 0) {
                 container.innerHTML = '<p style="color:var(--text-light); text-align:center;">لا يوجد واجبات مسجلة لهذه الشعبة حالياً.</p>';
                 return;
@@ -1066,10 +1154,16 @@
             tasks.forEach((task, index) => {
                 const div = document.createElement('div');
                 div.className = `task-item ${task.done ? 'completed' : ''}`;
+                const dateLabel = task.date ? new Date(task.date).toLocaleDateString('ar-EG') : '';
                 div.innerHTML = `
                     <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${index})">
-                    <span class="editable-value">${task.text}</span>
-                    <input type="text" class="editable-field editable-input" value="${task.text}" onchange="updateTaskText(${index}, this.value)">
+                    <div style="flex:1">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="editable-value">${task.text}</span>
+                            <small style="color:var(--text-light);">${dateLabel}</small>
+                        </div>
+                        <input type="text" class="editable-field editable-input" value="${task.text}" onchange="updateTaskText(${index}, this.value)">
+                    </div>
                     <button class="btn-sm btn-delete" onclick="deleteTask(${index})">حذف</button>
                 `;
                 container.appendChild(div);
@@ -1081,8 +1175,11 @@
             console.log('addAssignment called, section=', selectedSection, 'text=', text);
             if(text) {
                 if(!appData.assignments[selectedSection]) appData.assignments[selectedSection] = [];
-                appData.assignments[selectedSection].push({ id: Date.now(), text: text, done: false });
+                const dateInput = document.getElementById('new-assignment-date') ? document.getElementById('new-assignment-date').value : '';
+                const dateVal = dateInput ? new Date(dateInput).getTime() : Date.now();
+                appData.assignments[selectedSection].push({ id: Date.now(), text: text, done: false, date: dateVal });
                 document.getElementById('new-assignment-text').value = '';
+                if(document.getElementById('new-assignment-date')) document.getElementById('new-assignment-date').value = '';
                 saveData();
                 render();
                 // تحديث سريع لقائمة الواجبات الحالية
@@ -1175,6 +1272,27 @@
         function updateSummary(index, key, val) { appData.summaries[index][key] = val; saveData(); render(); }
         function deleteSummary(index) { if(confirm('حذف الملف؟')) { appData.summaries.splice(index, 1); saveData(); render(); } }
 
+        // Convert 24-hour 'HH:MM' string to 12-hour with Arabic markers (ص / م)
+        function formatTime12(time24) {
+            if(!time24) return '';
+            // if already a timestamp
+            if(typeof time24 === 'number') {
+                const d = new Date(time24);
+                let h = d.getHours();
+                const m = String(d.getMinutes()).padStart(2,'0');
+                const ampm = h >= 12 ? 'م' : 'ص';
+                h = h % 12; if(h === 0) h = 12;
+                return `${h}:${m} ${ampm}`;
+            }
+            const m = String(time24).match(/^(\d{1,2}):(\d{2})$/);
+            if(!m) return time24;
+            let hh = parseInt(m[1],10);
+            const mm = m[2];
+            const ampm = hh >= 12 ? 'م' : 'ص';
+            hh = hh % 12; if(hh === 0) hh = 12;
+            return `${hh}:${mm} ${ampm}`;
+        }
+
         function renderLiveLinks() {
             const container = document.getElementById('live-list');
             container.innerHTML = '';
@@ -1187,11 +1305,11 @@
                 div.innerHTML = `
                     <div class="data-header">
                         <h3>${sub}</h3>
-                        ${entry.link ? `<a href="${entry.link}" target="_blank" class="btn-link editable-value">دخول الحصة 🔴</a>` : '<span class="editable-value" style="color:gray">لا يوجد رابط</span>'}
-                        <p class="editable-value session-info">موعد الحصة: ${entry.from || '--'} إلى ${entry.to || '--'}</p>
+                        ${entry.link ? `<a href="${entry.link}" target="_blank" class="btn-link editable-value">دخول الحصة 🎉</a>` : '<span class="editable-value" style="color:gray">لا يوجد رابط</span>'}
+                        <p class="editable-value session-info">موعد الحصة: ${entry.from ? formatTime12(entry.from) : '--'} إلى ${entry.to ? formatTime12(entry.to) : '--'}</p>
                     </div>
                     <div class="editable-field">
-                        <label>رابط الحصة (Zoom/Teams):</label>
+                        <label>رابط الحصة (Teams):</label>
                         <input type="text" class="editable-input" value="${entry.link}" placeholder="الصق الرابط هنا" onchange="updateLiveLink('${sub}', 'link', this.value)">
                         <div style="display:flex; gap:10px; margin-top:8px;">
                             <div style="flex:1">
