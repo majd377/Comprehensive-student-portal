@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA manifest and theme -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="لوجو.png">
     <!-- أضف قبل </head> -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -71,6 +75,113 @@
             border-radius: 8px;
         }
 
+        /* Splash overlay styles */
+        .splash-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            z-index: 9999;
+            pointer-events: all;
+            transition: opacity 400ms ease, visibility 400ms ease;
+        }
+        .splash-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .splash-content { text-align: center; z-index: 10001; }
+        .splash-logo {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: inline-block;
+            transform: scale(0.6);
+            transition: transform 700ms cubic-bezier(.2,.9,.2,1), opacity 300ms;
+            will-change: transform;
+        }
+        .splash-logo.scale-up { transform: scale(8.5); }
+        .splash-logo.fade-out { opacity: 0; }
+        #splash-text {
+            position: absolute;
+            left: 50%;
+            bottom: 40px;
+            transform: translateX(-50%) translateY(8px);
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 3rem;
+            opacity: 0;
+            z-index: 10002;
+            transition: opacity 400ms ease, transform 400ms ease;
+        }
+        #splash-text.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Circle that expands to cover the screen */
+        .splash-circle {
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            z-index: 10000;
+            transform: scale(0);
+            transition: transform 700ms cubic-bezier(.2,.9,.2,1);
+            pointer-events: none;
+        }
+        .splash-circle.expand {
+            transform: scale(120);
+        }
+
+        /* Responsive splash adjustments for mobile */
+        @media (max-width: 600px) {
+            .splash-logo {
+                width: 36px;
+                height: 36px;
+                transform: scale(0.7);
+            }
+            .splash-logo.scale-up {
+                transform: scale(6.5);
+            }
+            .splash-circle {
+                width: 44px;
+                height: 44px;
+            }
+            .splash-circle.expand {
+                transform: scale(90);
+            }
+            #splash-text {
+                font-size: 1.8rem;
+                bottom: 28px;
+                transform: translateX(-50%) translateY(6px);
+            }
+            .splash-content { padding: 6px; }
+        }
+
+        /* iPad / medium-large tablets adjustments */
+        @media (max-width: 1024px) and (min-width: 601px) {
+            .splash-logo {
+                width: 42px;
+                height: 42px;
+                transform: scale(0.75);
+            }
+            .splash-logo.scale-up {
+                transform: scale(7.5);
+            }
+            .splash-circle {
+                width: 56px;
+                height: 56px;
+            }
+            .splash-circle.expand {
+                transform: scale(100);
+            }
+            #splash-text {
+                font-size: 2.4rem;
+                bottom: 34px;
+                transform: translateX(-50%) translateY(6px);
+            }
+            .splash-content { padding: 8px; }
+        }
+
         .nav-links {
             list-style: none;
             display: flex;
@@ -91,7 +202,7 @@
         }
 
         .nav-item:hover, .nav-item.active {
-            background-color: #eff6ff;
+            background-color: #fffbc2;
             color: var(--primary-color);
         }
 
@@ -127,7 +238,7 @@
 
         .admin-toggle {
             background-color: var(--text-color);
-            color: white;
+            color: #fffbc2;
             border: none;
             padding: 10px 20px;
             border-radius: 50px;
@@ -174,7 +285,7 @@
         .feature-icon {
             width: 50px;
             height: 50px;
-            background-color: #eff6ff;
+            background-color: #fffbc2;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -229,9 +340,31 @@
 
         .data-header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            align-items: flex-start;
             margin-bottom: 10px;
+            gap: 5px;
+        }
+
+        .data-header h3 {
+            margin: 0;
+        }
+
+        .data-header .editable-value {
+            word-break: break-word;
+            color: var(--text-light);
+        }
+
+        .lesson-name {
+            font-weight: 600;
+            color: var(--primary-color);
+            width: 100%;
+            overflow-wrap: break-word;
+        }
+
+        .progress-text {
+            color: var(--text-light);
+            font-size: 0.95rem;
         }
 
         /* Progress Bars */
@@ -311,6 +444,26 @@
             cursor: pointer;
         }
 
+        /* Assignment card: subject above description, proper sizing and wrapping */
+        .task-subject {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1rem;
+            text-align: right;
+            width: 100%;
+            overflow-wrap: break-word;
+            margin-bottom: 6px;
+        }
+
+        .task-desc {
+            font-size: 0.98rem;
+            color: inherit;
+            width: 100%;
+            word-break: break-word;
+        }
+
+        .task-item .editable-value { display: block; }
+
         .add-new-container {
             background: #f8fafc;
             padding: 20px;
@@ -376,6 +529,36 @@
             .data-card .btn-link { padding: 6px 10px; font-size: 0.85rem; }
         }
 
+        /* Responsive adjustments for assignments and recordings */
+        .filters-row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+        .filters-row .editable-input { flex: 1 1 180px; min-width:140px; }
+
+        .date-subj-group { display:flex; gap:8px; align-items:center; }
+
+        @media (max-width: 992px) {
+            .date-subj-group { flex-direction: column; align-items: stretch; }
+            .date-subj-group input[type="date"], .date-subj-group select { width: 100%; }
+            .date-subj-group div { display:flex; gap:6px; align-items:center; }
+        }
+
+        .task-item { align-items: flex-start; }
+
+        @media (max-width: 768px) {
+            .task-item { flex-direction: column; align-items: stretch; }
+            .task-item input[type="checkbox"] { align-self: flex-start; }
+            .task-subject { text-align: right; font-size: 1rem; }
+            .task-desc { font-size: 0.98rem; }
+            .task-item .btn-delete { align-self: flex-end; margin-top:8px; }
+            #recordings .data-card, #assignments .task-item { width: 100%; }
+            #recordings .add-new-container, #assignments .add-new-container { width: 100%; }
+            .filters-row .editable-input { flex: 1 1 100%; min-width: 0; }
+            /* keep the "عرض:" label inline with its select on small screens */
+            .filters-row > label { flex: 0 0 auto; white-space: nowrap; }
+            .filters-row select#record-filter-mode, .filters-row select#assign-filter-mode { flex: 0 0 160px; min-width: 120px; }
+            /* make the date+subject group stack but keep label inline when possible */
+            .date-subj-group { width: 100%; }
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -425,9 +608,19 @@
 </head>
 <body>
 
+    <!-- Splash Overlay -->
+    <div id="splash-overlay" class="splash-overlay">
+        <div class="splash-content">
+            <img src="لوجو.png" id="splash-logo" class="splash-logo" alt="شعار">
+            <h1 id="splash-text">أهلاً بكم في عالَــم النًّــبـلاء</h1>
+        </div>
+        <div id="splash-circle" class="splash-circle" aria-hidden="true"></div>
+    </div>
+
+
     <nav class="sidebar" id="sidebar">
         <div class="logo">
-            <span>🎓</span>عالَــم النًّــبـلاء
+            <img src="لوجو.png" class="site-logo" alt="شعار الموقع" style="width:28px; height:28px; object-fit:cover; margin-inline-end:8px; vertical-align:middle; border-radius:4px;">عالَــم النًّــبـلاء
         </div>
         <ul class="nav-links">
             <li class="nav-item active" onclick="showSection('home')">
@@ -438,26 +631,17 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"></circle><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path></svg>
                 روابط الحصص
             </li>
-            <li class="nav-item" onclick="showSection('progress')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                التقدم بالمنهج
-            </li>
             <li class="nav-item" onclick="showSection('assignments')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 الواجبات
             </li>
-            <li class="nav-item" onclick="showSection('support')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                أرقام الدعم
+            <li class="nav-item" onclick="showSection('recordings')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                تسجيلات الحصص
             </li>
-            <li class="nav-item" onclick="showSection('summaries')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                التلخيصات
-            </li>
-            
-            <li class="nav-item" onclick="showSection('news')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                آخر الأخبار
+            <li class="nav-item" onclick="showSection('progress')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                التقدم بالمنهج
             </li>
             <li class="nav-item" onclick="showSection('books-packages')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -467,6 +651,10 @@
                 </svg>
                 الكتب والرزم
             </li>
+            <li class="nav-item" onclick="showSection('summaries')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                التلخيصات
+            </li>
             <li class="nav-item" onclick="showSection('teachers')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><path d="M4 21v-2a4 4 0 0 1 3-3.87"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 أسماء الأساتذة
@@ -475,9 +663,17 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"></path></svg>
                 روابط المجموعات
             </li>
+            <li class="nav-item" onclick="showSection('support')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                أرقام الدعم
+            </li>
             <li class="nav-item" onclick="showSection('important-links')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                 روابط مهمة
+            </li>
+            <li class="nav-item" onclick="showSection('news')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                آخر الأخبار
             </li>
             <li class="nav-item" onclick="showSection('about-team')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -485,6 +681,21 @@
             </li>
         </ul>
     </nav>
+
+    <!-- PWA install banner (hidden by default) -->
+    <div id="pwa-install-banner" style="display:none; position:fixed; left:16px; right:16px; bottom:18px; background:#fff; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,0.08); padding:12px 14px; z-index:2000; direction:rtl; align-items:center; gap:10px;">
+        <div style="display:flex; gap:10px; align-items:center;">
+            <img src="لوجو.png" alt="icon" style="width:44px; height:44px; border-radius:8px; object-fit:cover;">
+            <div style="text-align:right;">
+                <div style="font-weight:700;">تثبيت التطبيق</div>
+                <div style="color:var(--text-light); font-size:0.95rem;">يمكنك تثبيت "عالَــم النًّــبـلاء" كتطبيق</div>
+            </div>
+        </div>
+        <div style="margin-inline-start:auto; display:flex; gap:8px;">
+            <button id="btnDismissPWA" class="btn-sm btn-delete" style="background:#ef4444;">إغلاق</button>
+            <button id="btnInstallPWA" class="btn-sm btn-save">تثبيت</button>
+        </div>
+    </div>
 
     <main class="main-content">
         <div class="header">
@@ -519,36 +730,30 @@
                     <h3>حصص اليوم</h3>
                     <p>روابط الحصص أول بأول</p>
                 </div>
-                <div class="feature-card" onclick="showSection('progress')">
-                    <div class="feature-icon">📊</div>
-                    <h3>التقدم بالمنهج</h3>
-                    <p>تابع وصولك في كل مادة لكل شعبة</p>
-                </div>
                 <div class="feature-card" onclick="showSection('assignments')">
                     <div class="feature-icon">📝</div>
                     <h3>الواجبات</h3>
                     <p>سجل الواجبات اليومية وتحقق منها</p>
                 </div>
-                <div class="feature-card" onclick="showSection('support')">
-                    <div class="feature-icon">📞</div>
-                    <h3>أرقام الدعم</h3>
-                    <p>تواصل مع المسؤولين عند الحاجة</p>
+                <div class="feature-card" onclick="showSection('recordings')">
+                    <div class="feature-icon">🎥</div>
+                    <h3>تسجيلات الحصص</h3>
+                    <p>حفظ روابط تسجيلات الحصص (يوتيوب)</p>
+                </div>
+                <div class="feature-card" onclick="showSection('progress')">
+                    <div class="feature-icon">📊</div>
+                    <h3>التقدم بالمنهج</h3>
+                    <p>تابع وصولك في كل مادة لكل شعبة</p>
+                </div>
+                <div class="feature-card" onclick="showSection('books-packages')">
+                    <div class="feature-icon">🌟</div>
+                    <h3>الكتب والرزم</h3>
+                    <p>تحميل الكتب والرزم بسهولة</p>
                 </div>
                 <div class="feature-card" onclick="showSection('summaries')">
                     <div class="feature-icon">📚</div>
                     <h3>التلخيصات والملفات</h3>
                     <p>نزّل ملفات التلخيص المهمة</p>
-                </div>
-                
-                <div class="feature-card" onclick="showSection('news')">
-                    <div class="feature-icon">📰</div>
-                    <h3>آخر الأخبار</h3>
-                    <p>تابع أحدث أخبار المدرسة</p>
-                </div>
-                <div class="feature-card" onclick="showSection('books-packages')">
-                    <div class="feature-icon">📦</div>
-                    <h3>الكتب والرزم</h3>
-                    <p>تحميل الكتب والرزم بسهولة</p>
                 </div>
                 <div class="feature-card" onclick="showSection('teachers')">
                     <div class="feature-icon">👩‍🏫</div>
@@ -560,10 +765,20 @@
                     <h3>روابط المجموعات</h3>
                     <p>روابط مجموعات الشُعب للدخول السريع</p>
                 </div>
+                <div class="feature-card" onclick="showSection('support')">
+                    <div class="feature-icon">📞</div>
+                    <h3>أرقام الدعم</h3>
+                    <p>تواصل مع المسؤولين عند الحاجة</p>
+                </div>
                 <div class="feature-card" onclick="showSection('important-links')">
                     <div class="feature-icon">🌷</div>
                     <h3>روابط مهمة</h3>
                     <p>أفضل المصادر</p>
+                </div>
+                <div class="feature-card" onclick="showSection('news')">
+                    <div class="feature-icon">📰</div>
+                    <h3>آخر الأخبار</h3>
+                    <p>تابع أحدث أخبار المدرسة</p>
                 </div>
                 <div class="feature-card" onclick="showSection('about-team')">
                     <div class="feature-icon">🤠</div>
@@ -580,21 +795,71 @@
             <div id="progress-list"></div>
         </div>
 
+        <div id="recordings" class="content-area">
+            <button class="btn-link" style="margin-bottom:15px;" onclick="goBack()" id="backBtn">⬅️ رجوع</button>
+            <div class="section-selector" id="record-sec-selector"></div>
+            <div class="filters-row" style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+                <label style="color:var(--text-light);">عرض:</label>
+                <select id="record-filter-mode" class="editable-input" style="width:160px;" onchange="renderRecordings()">
+                    <option value="all">كل التسجيلات</option>
+                    <option value="date">حسب التاريخ</option>
+                </select>
+                <div class="date-subj-group" style="display:flex; gap:8px; align-items:center;">
+                    <input type="date" id="record-filter-date" class="editable-input" style="max-width:180px; display:none;" onchange="renderRecordings()">
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <label style="color:var(--text-light);">المادة:</label>
+                        <select id="record-filter-subject" class="editable-input" style="width:180px;" onchange="renderRecordings()">
+                            <option value="all">كل المواد</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="recordings-channel-box" style="margin-bottom:10px;">
+                <!-- will be filled by renderRecordings() -->
+            </div>
+            <div id="recordings-list"></div>
+            <div class="add-new-container">
+                <h4>إضافة تسجيل جديد للشعبة الحالية</h4>
+                <input type="text" id="new-record-title" class="editable-input" placeholder="اسم التسجيل (مثلاً: تسجيل أول الحصة)">
+                <input type="text" id="new-record-link" class="editable-input" placeholder="رابط يوتيوب (https://...)">
+                <label style="margin-top:8px; color:var(--text-light);">المادة (اختياري):</label>
+                <select id="new-record-subject" class="editable-input" style="margin-bottom:8px;">
+                    <option value="">--- اختر مادة ---</option>
+                </select>
+                <label style="margin-top:8px; color:var(--text-light);">تاريخ التسجيل (اختياري):</label>
+                <input type="date" id="new-record-date" class="editable-input" style="margin-bottom:8px;">
+                <button class="btn-sm btn-add" onclick="addRecording()">إضافة تسجيل</button>
+                <div style="margin-top:12px; color:var(--text-light);">ملاحظة: يمكنك إضافة رابط شامل لكل مادة من إعدادات الشعبة أسفل كل قائمة التسجيلات.</div>
+            </div>
+        </div>
+
         <div id="assignments" class="content-area">
             <button class="btn-link" style="margin-bottom:15px;" onclick="goBack()" id="backBtn">⬅️ رجوع</button>
             <div class="section-selector" id="assign-sec-selector"></div>
-            <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+            <div class="filters-row" style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
                 <label style="color:var(--text-light);">عرض:</label>
                 <select id="assign-filter-mode" class="editable-input" style="width:160px;" onchange="renderAssignments()">
                     <option value="all">كل الواجبات</option>
                     <option value="date">حسب التاريخ</option>
                 </select>
-                <input type="date" id="assign-filter-date" class="editable-input" style="max-width:180px; display:none;" onchange="renderAssignments()">
+                <div class="date-subj-group" style="display:flex; gap:8px; align-items:center;">
+                    <input type="date" id="assign-filter-date" class="editable-input" style="max-width:180px; display:none;" onchange="renderAssignments()">
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <label style="color:var(--text-light);">المادة:</label>
+                        <select id="assign-filter-subject" class="editable-input" style="width:180px;" onchange="renderAssignments()">
+                            <option value="all">كل المواد</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div id="assignments-list"></div>
             <div class="add-new-container">
                 <h4>إضافة واجب جديد للشعبة الحالية</h4>
                 <input type="text" id="new-assignment-text" class="editable-input" placeholder="اكتب تفاصيل الواجب هنا...">
+                <label style="margin-top:8px; color:var(--text-light);">المادة (اختياري):</label>
+                <select id="new-assignment-subject" class="editable-input" style="margin-bottom:8px;">
+                    <option value="">--- اختر مادة ---</option>
+                </select>
                 <label style="margin-top:8px; color:var(--text-light);">تاريخ الواجب (اختياري):</label>
                 <input type="date" id="new-assignment-date" class="editable-input" style="margin-bottom:8px;">
                 <button class="btn-sm btn-add" onclick="addAssignment()">إضافة واجب</button>
@@ -711,6 +976,43 @@
     
 
     <script>
+        // --- PWA: register service worker and handle beforeinstallprompt ---
+        if('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW register failed', e));
+            });
+        }
+
+        let deferredPrompt = null;
+        const pwaBanner = document.getElementById('pwa-install-banner');
+        const btnInstall = document.getElementById('btnInstallPWA');
+        const btnDismiss = document.getElementById('btnDismissPWA');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e; // save for later
+            if(pwaBanner) pwaBanner.style.display = 'flex';
+        });
+
+        if(btnInstall) btnInstall.addEventListener('click', async () => {
+            if(!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const choice = await deferredPrompt.userChoice;
+            if(choice && choice.outcome === 'accepted') {
+                if(pwaBanner) pwaBanner.style.display = 'none';
+                deferredPrompt = null;
+            }
+        });
+
+        if(btnDismiss) btnDismiss.addEventListener('click', () => {
+            if(pwaBanner) pwaBanner.style.display = 'none';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            // Installed
+            if(pwaBanner) pwaBanner.style.display = 'none';
+            deferredPrompt = null;
+        });
         // --- Firebase Config ---
         const firebaseConfig = {
           apiKey: "AIzaSyB9gImjYRL8ymrCPiJAWkGTWv0vMv6eM08",
@@ -739,6 +1041,9 @@
             subjects: ["الرياضيات", "الفيزياء", "الكيمياء", "اللغة العربية", "اللغة الإنجليزية", "علوم الحاسوب", "التربية الإسلامية"],
             progress: {}, 
             assignments: {},
+            recordings: {},
+            recordingsLinks: {},
+            recordingsChannelLink: "",
             support: [
                 { id: 1, name: "أ. محمد أحمد", role: "مشرف الشعب العلمي", phone: "0790000000" },
                 { id: 2, name: "أ. سارة علي", role: "دعم فني", phone: "0780000000" }
@@ -783,10 +1088,13 @@
             if(!defaultData.progress[i]) defaultData.progress[i] = {};
             if(!defaultData.assignments[i]) defaultData.assignments[i] = [];
             if(!defaultData.liveLinks[i]) defaultData.liveLinks[i] = {};
+                if(!defaultData.recordings[i]) defaultData.recordings[i] = [];
+                if(!defaultData.recordingsLinks[i]) defaultData.recordingsLinks[i] = {};
             
                 defaultData.subjects.forEach(sub => {
                     defaultData.progress[i][sub] = { current: 1, total: 20 };
                     defaultData.liveLinks[i][sub] = { link: "", from: "", to: "" };
+                    defaultData.recordingsLinks[i][sub] = "";
                 });
         }
 
@@ -799,6 +1107,9 @@
             if(!data.progress) data.progress = {};
             if(!data.assignments) data.assignments = {};
             if(!data.liveLinks) data.liveLinks = {};
+            if(!data.recordings) data.recordings = {};
+            if(!data.recordingsLinks) data.recordingsLinks = {};
+            if(!data.recordingsChannelLink) data.recordingsChannelLink = '';
             if(!data.support) data.support = defaultData.support.slice();
             if(!data.summaries) data.summaries = defaultData.summaries.slice();
             if(!data.liveLinks) data.liveLinks = {};
@@ -818,12 +1129,15 @@
                 if(!data.progress[i]) data.progress[i] = {};
                 if(!data.assignments[i]) data.assignments[i] = [];
                 if(!data.liveLinks[i]) data.liveLinks[i] = {};
+                if(!data.recordings[i]) data.recordings[i] = [];
+                if(!data.recordingsLinks[i]) data.recordingsLinks[i] = {};
                 if(!data.teachers[i]) data.teachers[i] = [];
                 if(!data.groupLinks[i]) data.groupLinks[i] = [];
                 data.subjects.forEach(sub => {
                     if(!data.progress[i][sub]) data.progress[i][sub] = { current: 1, total: 20 };
                     // normalize liveLinks entry to object with link/from/to
                     if(!data.liveLinks[i][sub] || typeof data.liveLinks[i][sub] !== 'object') data.liveLinks[i][sub] = { link: "", from: "", to: "" };
+                    if(!data.recordingsLinks[i][sub]) data.recordingsLinks[i][sub] = "";
                 });
             }
 
@@ -955,6 +1269,7 @@
                 'support': 'أرقام الدعم',
                 'summaries': 'الملفات والتلخيصات',
                 'live-links': 'روابط الحصص',
+                'recordings': 'تسجيلات الحصص',
                 'news': 'آخر الأخبار',
                 'books-packages': 'الكتب والرزم',
                 'teachers': 'أسماء الأساتذة',
@@ -993,6 +1308,7 @@
             renderDate();
             renderSectionSelectors();
             if(currentView === 'progress') renderProgress();
+            if(currentView === 'recordings') renderRecordings();
             if(currentView === 'assignments') renderAssignments();
             if(currentView === 'support') renderSupport();
             if(currentView === 'summaries') renderSummaries();
@@ -1012,7 +1328,7 @@
         }
 
         function renderSectionSelectors() {
-            const ids = ['progress-sec-selector', 'assign-sec-selector', 'live-sec-selector'];
+            const ids = ['progress-sec-selector', 'record-sec-selector', 'assign-sec-selector', 'live-sec-selector'];
             // add selectors for teachers and group-links as well
             ids.push('teachers-sec-selector', 'group-sec-selector');
             ids.forEach(id => {
@@ -1050,9 +1366,10 @@
                 card.innerHTML = `
                     <div class="data-header">
                         <h3>${sub}</h3>
-                        <div class="editable-value">${data.lessonName && data.lessonName.trim() ? data.lessonName : `درس ${data.current} من ${data.total}`}</div>
+                        <div class="lesson-name editable-value">${data.lessonName && data.lessonName.trim() ? data.lessonName : ''}</div>
+                        <div class="progress-text editable-value">درس ${data.current} من ${data.total}</div>
                     </div>
-                    <div class="editable-field">
+                    <div class="editable-field" style="margin-bottom: 12px;">
                         <label>اسم الدرس الحالي (اختياري):</label>
                         <input type="text" class="editable-input" value="${data.lessonName || ''}" onchange="updateProgress('${sub}', 'lessonName', this.value)">
                         <label>الدرس الحالي (رقم):</label>
@@ -1126,7 +1443,23 @@
             // filter controls
             const modeEl = document.getElementById('assign-filter-mode');
             const dateEl = document.getElementById('assign-filter-date');
+            const subjEl = document.getElementById('assign-filter-subject');
             const mode = modeEl ? modeEl.value : 'all';
+            // populate subject filters from appData.subjects
+            if(subjEl) {
+                const prev = subjEl.value || 'all';
+                let opts = '<option value="all">كل المواد</option>';
+                (appData.subjects || []).forEach(s => { opts += `<option value="${s}">${s}</option>`; });
+                subjEl.innerHTML = opts;
+                subjEl.value = prev;
+            }
+            // populate the subject chooser in the add-assignment form
+            const newSubEl = document.getElementById('new-assignment-subject');
+            if(newSubEl) {
+                let opts2 = '<option value="">--- اختر مادة ---</option>';
+                (appData.subjects || []).forEach(s => { opts2 += `<option value="${s}">${s}</option>`; });
+                newSubEl.innerHTML = opts2;
+            }
             if(mode === 'date') {
                 if(dateEl) {
                     dateEl.style.display = '';
@@ -1146,6 +1479,12 @@
                 if(dateEl) dateEl.style.display = 'none';
             }
 
+            // apply subject filter if selected
+            const selectedSubject = subjEl ? subjEl.value : 'all';
+            if(selectedSubject && selectedSubject !== 'all') {
+                tasks = tasks.filter(t => t.subject === selectedSubject);
+            }
+
             if(tasks.length === 0) {
                 container.innerHTML = '<p style="color:var(--text-light); text-align:center;">لا يوجد واجبات مسجلة لهذه الشعبة حالياً.</p>';
                 return;
@@ -1155,13 +1494,13 @@
                 const div = document.createElement('div');
                 div.className = `task-item ${task.done ? 'completed' : ''}`;
                 const dateLabel = task.date ? new Date(task.date).toLocaleDateString('ar-EG') : '';
+                const subjectHtml = task.subject ? `<div class="task-subject">${task.subject}</div>` : '';
                 div.innerHTML = `
                     <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${index})">
                     <div style="flex:1">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span class="editable-value">${task.text}</span>
-                            <small style="color:var(--text-light);">${dateLabel}</small>
-                        </div>
+                        ${subjectHtml}
+                        <div class="task-desc"><span class="editable-value">${task.text}</span></div>
+                        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;"><small style="color:var(--text-light);">${dateLabel}</small></div>
                         <input type="text" class="editable-field editable-input" value="${task.text}" onchange="updateTaskText(${index}, this.value)">
                     </div>
                     <button class="btn-sm btn-delete" onclick="deleteTask(${index})">حذف</button>
@@ -1170,16 +1509,161 @@
             });
         }
 
+        // --- RECORDINGS LOGIC ---
+        function renderRecordings() {
+            const container = document.getElementById('recordings-list');
+            container.innerHTML = '';
+            let recs = appData.recordings[selectedSection] || [];
+
+            // render channel link box (global default)
+            const channelBox = document.getElementById('recordings-channel-box');
+            if(channelBox) {
+                const ch = appData.recordingsChannelLink || '';
+                channelBox.innerHTML = `
+                    <div style="padding:10px; background:#fff; border-radius:8px; border:1px solid #eef2ff;">
+                        <strong>رابط قناة التسجيلات:</strong>
+                        ${ch ? `<a href="${ch}" target="_blank" style="margin-inline-start:8px; display:inline-block;">فتح القناة</a>` : '<span style="color:var(--text-light); margin-inline-start:8px;">لم يتم تعيين رابط القناة بعد</span>'}
+                        ${isEditMode ? `<div style="margin-top:8px;"><input type="text" id="global-recordings-channel" class="editable-input" placeholder="رابط قناة التسجيلات" value="${ch}" onchange="updateRecordingsChannelLink(this.value)"></div>` : ''}
+                    </div>
+                `;
+            }
+
+            // filter controls
+            const modeEl = document.getElementById('record-filter-mode');
+            const dateEl = document.getElementById('record-filter-date');
+            const subjEl = document.getElementById('record-filter-subject');
+            const mode = modeEl ? modeEl.value : 'all';
+
+            // populate subject filters
+            if(subjEl) {
+                const prev = subjEl.value || 'all';
+                let opts = '<option value="all">كل المواد</option>';
+                (appData.subjects || []).forEach(s => { opts += `<option value="${s}">${s}</option>`; });
+                subjEl.innerHTML = opts;
+                subjEl.value = prev;
+            }
+
+            // populate subject chooser in add form
+            const newSubEl = document.getElementById('new-record-subject');
+            if(newSubEl) {
+                let opts2 = '<option value="">--- اختر مادة ---</option>';
+                (appData.subjects || []).forEach(s => { opts2 += `<option value="${s}">${s}</option>`; });
+                newSubEl.innerHTML = opts2;
+            }
+
+            if(mode === 'date') {
+                if(dateEl) {
+                    dateEl.style.display = '';
+                    const selDate = dateEl.value;
+                    if(selDate) {
+                        recs = recs.filter(r => {
+                            if(!r.date) return false;
+                            const d = new Date(r.date);
+                            const y = d.getFullYear();
+                            const m = String(d.getMonth()+1).padStart(2,'0');
+                            const day = String(d.getDate()).padStart(2,'0');
+                            return `${y}-${m}-${day}` === selDate;
+                        });
+                    }
+                }
+            } else { if(dateEl) dateEl.style.display = 'none'; }
+
+            // apply subject filter
+            const selectedSubject = subjEl ? subjEl.value : 'all';
+            if(selectedSubject && selectedSubject !== 'all') {
+                recs = recs.filter(r => r.subject === selectedSubject);
+            }
+
+            if(recs.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-light); text-align:center;">جميع التسجيلات مرفوعة على قناة 🌸غزة العاشر أ ٢٥ ﴿ تسجيلات الحصص ﴾🌸</p>';
+            } else {
+                recs.forEach((r) => {
+                    const origIndex = (appData.recordings[selectedSection] || []).findIndex(rr => rr.id === r.id);
+                    const row = document.createElement('div');
+                    row.className = 'data-card';
+                    const dateLabel = r.date ? new Date(r.date).toLocaleDateString('ar-EG') : '';
+                    row.innerHTML = `
+                        <div class="data-header">
+                            <h3>${r.subject || 'عام'}</h3>
+                            <div class="lesson-name">${r.title}</div>
+                            <div class="progress-text">${dateLabel}</div>
+                        </div>
+                        <div style="margin-top:8px;"><a href="${r.link}" target="_blank">فتح التسجيل على يوتيوب</a></div>
+                        <div style="margin-top:8px; display:flex; gap:8px;">
+                            <button class="btn-sm btn-delete" onclick="deleteRecording(${origIndex})">حذف</button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            // show per-subject recordings link if selected; fallback to global channel link when subject link missing
+            if(selectedSubject && selectedSubject !== 'all') {
+                const subjLinks = (appData.recordingsLinks && appData.recordingsLinks[selectedSection]) || {};
+                const subjectLink = subjLinks[selectedSubject] || '';
+                const link = subjectLink || (appData.recordingsChannelLink || '');
+                const box = document.createElement('div');
+                box.className = 'add-new-container';
+                box.style.marginTop = '12px';
+                box.innerHTML = `
+                    <h4>رابط كل التسجيلات للمادة ${selectedSubject}</h4>
+                    ${subjectLink ? `<a href="${subjectLink}" target="_blank">فتح رابط كل التسجيلات (رابط المادة)</a>` : (link ? `<a href="${link}" target="_blank">فتح رابط قناة التسجيلات (افتراضي)</a>` : '<p style="color:var(--text-light);">لا يوجد رابط شامل لهذه المادة أو للقناة.</p>')}
+                    ${isEditMode ? `<label style="margin-top:8px; color:var(--text-light);">تعريف/تعديل رابط المادة (سيُستخدم بدل القناة):</label><input type="text" id="edit-recordings-link" class="editable-input" value="${subjectLink || ''}" onchange="updateRecordingsLink('${selectedSubject}', this.value)">` : ''}
+                `;
+                container.appendChild(box);
+            }
+        }
+
+        function addRecording() {
+            const title = document.getElementById('new-record-title').value.trim();
+            const link = document.getElementById('new-record-link').value.trim();
+            const subj = document.getElementById('new-record-subject').value || '';
+            const dateInput = document.getElementById('new-record-date') ? document.getElementById('new-record-date').value : '';
+            if(!title || !link) { alert('الرجاء إدخال اسم التسجيل ورابط يوتيوب'); return; }
+            if(!appData.recordings[selectedSection]) appData.recordings[selectedSection] = [];
+            const dateVal = dateInput ? new Date(dateInput).getTime() : Date.now();
+            appData.recordings[selectedSection].push({ id: Date.now(), title: title, link: link, subject: subj, date: dateVal });
+            saveData();
+            document.getElementById('new-record-title').value = '';
+            document.getElementById('new-record-link').value = '';
+            if(document.getElementById('new-record-date')) document.getElementById('new-record-date').value = '';
+            if(document.getElementById('new-record-subject')) document.getElementById('new-record-subject').value = '';
+            renderRecordings();
+        }
+
+        function deleteRecording(index) {
+            if(!confirm('هل تريد حذف هذا التسجيل؟')) return;
+            if(!appData.recordings[selectedSection]) return;
+            appData.recordings[selectedSection].splice(index,1);
+            saveData();
+            renderRecordings();
+        }
+
+        function updateRecordingsLink(subject, value) {
+            if(!appData.recordingsLinks[selectedSection]) appData.recordingsLinks[selectedSection] = {};
+            appData.recordingsLinks[selectedSection][subject] = value;
+            saveData();
+            renderRecordings();
+        }
+
+        function updateRecordingsChannelLink(value) {
+            appData.recordingsChannelLink = value || '';
+            saveData();
+            renderRecordings();
+        }
+
         function addAssignment() {
             const text = document.getElementById('new-assignment-text').value;
             console.log('addAssignment called, section=', selectedSection, 'text=', text);
             if(text) {
                 if(!appData.assignments[selectedSection]) appData.assignments[selectedSection] = [];
                 const dateInput = document.getElementById('new-assignment-date') ? document.getElementById('new-assignment-date').value : '';
+                const subjInput = document.getElementById('new-assignment-subject') ? document.getElementById('new-assignment-subject').value : '';
                 const dateVal = dateInput ? new Date(dateInput).getTime() : Date.now();
-                appData.assignments[selectedSection].push({ id: Date.now(), text: text, done: false, date: dateVal });
+                appData.assignments[selectedSection].push({ id: Date.now(), text: text, done: false, date: dateVal, subject: subjInput || '' });
                 document.getElementById('new-assignment-text').value = '';
                 if(document.getElementById('new-assignment-date')) document.getElementById('new-assignment-date').value = '';
+                if(document.getElementById('new-assignment-subject')) document.getElementById('new-assignment-subject').value = '';
                 saveData();
                 render();
                 // تحديث سريع لقائمة الواجبات الحالية
@@ -1583,7 +2067,7 @@
                             <textarea class="editable-field editable-textarea" onchange="updateTeam(${index}, 'bio', this.value)" style="min-height: 50px; margin-top: 5px;">${member.bio || ''}</textarea>
                         </div>
                         <div style="text-align:left;">
-                            <a href="https://wa.me/${member.whatsapp}" target="_blank" class="btn-link editable-value">واتس 💬</a>
+                            <a href="https://wa.me/${member.whatsapp}" target="_blank" class="btn-link editable-value">واتس</a>
                             <input class="editable-field editable-input" value="${member.whatsapp}" placeholder="رقم الواتس" onchange="updateTeam(${index}, 'whatsapp', this.value)">
                         </div>
                     </div>
@@ -1693,7 +2177,67 @@
         document.addEventListener('DOMContentLoaded', function() {
             switchBooksPackagesType('books');
             render();
+            // Start splash animation sequence
+            startSplashSequence();
         });
+
+        // Splash animation sequence
+        function startSplashSequence() {
+            try {
+                const overlay = document.getElementById('splash-overlay');
+                const logo = document.getElementById('splash-logo');
+                const text = document.getElementById('splash-text');
+                const circle = document.getElementById('splash-circle');
+                if(!overlay || !logo || !text || !circle) return;
+
+                // Prevent scrolling while splash is active
+                document.documentElement.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+
+                // small delay then scale-up logo
+                setTimeout(() => {
+                    logo.classList.add('scale-up');
+                }, 80);
+
+                // show welcome text shortly after
+                setTimeout(() => {
+                    text.classList.add('show');
+                }, 650);
+
+                // After a pause, morph into expanding circle
+                setTimeout(() => {
+                    // position the circle at the logo center
+                    const rect = logo.getBoundingClientRect();
+                    const cx = rect.left + rect.width/2;
+                    const cy = rect.top + rect.height/2;
+                    circle.style.left = cx + 'px';
+                    circle.style.top = cy + 'px';
+                    // hide the logo image (fade)
+                    logo.classList.add('fade-out');
+                    text.classList.remove('show');
+                    // start expand
+                    requestAnimationFrame(() => {
+                        circle.classList.add('expand');
+                    });
+                }, 1800);
+
+                // Remove overlay and restore scrolling after expansion
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    document.documentElement.style.overflow = '';
+                    document.body.style.overflow = '';
+                    // cleanup: remove overlay from DOM after transition
+                    setTimeout(() => {
+                        if(overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    }, 500);
+                }, 2600);
+            } catch (e) {
+                console.warn('splash error', e);
+                const overlay = document.getElementById('splash-overlay'); if(overlay) overlay.remove();
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            }
+        }
 
         // Ensure functions are reachable from inline onclick handlers (debugging helpers)
         window.addAssignment = addAssignment;
