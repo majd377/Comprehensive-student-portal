@@ -862,6 +862,36 @@
                 </select>
                 <label style="margin-top:8px; color:var(--text-light);">تاريخ الواجب (اختياري):</label>
                 <input type="date" id="new-assignment-date" class="editable-input" style="margin-bottom:8px;">
+                
+                <!-- Attachment Section -->
+                <div style="margin-top:15px; padding:12px; background:#f0f0f0; border-radius:8px;">
+                    <label style="color:var(--text-light); font-weight:bold;">إضافة ملحق (اختياري):</label>
+                    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn-sm" style="background:#4CAF50; color:white;" onclick="selectAttachmentType('image')">📷 صورة</button>
+                        <button type="button" class="btn-sm" style="background:#2196F3; color:white;" onclick="selectAttachmentType('link')">🔗 رابط</button>
+                        <button type="button" class="btn-sm" style="background:#FF9800; color:white;" onclick="selectAttachmentType('file')">📎 ملف</button>
+                    </div>
+                    
+                    <div id="attachment-image-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">اختر صورة:</label>
+                        <input type="file" id="attachment-image-input" class="editable-input" accept="image/*" style="margin-bottom:8px;">
+                        <div id="attachment-image-preview" style="max-width:150px; margin-top:8px;"></div>
+                    </div>
+                    
+                    <div id="attachment-link-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">رابط الملف:</label>
+                        <input type="text" id="attachment-link-input" class="editable-input" placeholder="https://...">
+                    </div>
+                    
+                    <div id="attachment-file-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">اختر ملف (Word, Excel, PDF, PowerPoint):</label>
+                        <input type="file" id="attachment-file-input" class="editable-input" accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx" style="margin-bottom:8px;">
+                        <div id="attachment-file-preview" style="font-size:0.85rem; color:var(--text-light); margin-top:8px;"></div>
+                    </div>
+                    
+                    <button type="button" class="btn-sm" style="background:#9C27B0; color:white; margin-top:8px;" onclick="clearAttachment()">✕ إزالة الملحق</button>
+                </div>
+                
                 <button class="btn-sm btn-add" onclick="addAssignment()">إضافة واجب</button>
             </div>
         </div>
@@ -1495,11 +1525,41 @@
                 div.className = `task-item ${task.done ? 'completed' : ''}`;
                 const dateLabel = task.date ? new Date(task.date).toLocaleDateString('ar-EG') : '';
                 const subjectHtml = task.subject ? `<div class="task-subject">${task.subject}</div>` : '';
+                
+                // Attachment HTML
+                let attachmentHtml = '';
+                if(task.attachment) {
+                    if(task.attachment.type === 'image') {
+                        attachmentHtml = `
+                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                <strong style="color:#666; font-size:0.9rem;">📷 صورة:</strong>
+                                <img src="${task.attachment.data}" style="max-width:100%; max-height:200px; border-radius:6px; margin-top:6px; cursor:pointer;" onclick="viewImage('${task.attachment.data}')">
+                            </div>
+                        `;
+                    } else if(task.attachment.type === 'link') {
+                        attachmentHtml = `
+                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                <strong style="color:#666; font-size:0.9rem;">🔗 رابط:</strong>
+                                <a href="${task.attachment.url}" target="_blank" style="display:inline-block; margin-right:8px; color:#0066cc; text-decoration:none;">فتح الرابط</a>
+                            </div>
+                        `;
+                    } else if(task.attachment.type === 'file') {
+                        attachmentHtml = `
+                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                <strong style="color:#666; font-size:0.9rem;">📎 ملف:</strong>
+                                <button class="btn-sm" style="background:#FF6B6B; color:white; margin-right:8px;" onclick="downloadFile('${index}', '${task.attachment.name}')">⬇️ تحميل</button>
+                                <span style="color:#999; font-size:0.85rem;">${task.attachment.name}</span>
+                            </div>
+                        `;
+                    }
+                }
+                
                 div.innerHTML = `
                     <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${index})">
                     <div style="flex:1">
                         ${subjectHtml}
                         <div class="task-desc"><span class="editable-value">${task.text}</span></div>
+                        ${attachmentHtml}
                         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;"><small style="color:var(--text-light);">${dateLabel}</small></div>
                         <input type="text" class="editable-field editable-input" value="${task.text}" onchange="updateTaskText(${index}, this.value)">
                     </div>
@@ -1652,6 +1712,116 @@
             renderRecordings();
         }
 
+        // --- ATTACHMENT FUNCTIONS ---
+        let currentAttachment = null;
+
+        function selectAttachmentType(type) {
+            console.log('selectAttachmentType called with type:', type);
+            try {
+                // Hide all sections first
+                const imgSec = document.getElementById('attachment-image-section');
+                const linkSec = document.getElementById('attachment-link-section');
+                const fileSec = document.getElementById('attachment-file-section');
+                
+                if(imgSec) imgSec.style.display = 'none';
+                if(linkSec) linkSec.style.display = 'none';
+                if(fileSec) fileSec.style.display = 'none';
+                
+                // Show selected section
+                if(type === 'image') {
+                    if(imgSec) {
+                        imgSec.style.display = 'block';
+                        console.log('Image section shown');
+                    }
+                    const imgInput = document.getElementById('attachment-image-input');
+                    if(imgInput) {
+                        imgInput.onchange = handleImageAttachment;
+                    }
+                } else if(type === 'link') {
+                    if(linkSec) {
+                        linkSec.style.display = 'block';
+                        console.log('Link section shown');
+                    }
+                } else if(type === 'file') {
+                    if(fileSec) {
+                        fileSec.style.display = 'block';
+                        console.log('File section shown');
+                    }
+                    const fileInput = document.getElementById('attachment-file-input');
+                    if(fileInput) {
+                        fileInput.onchange = handleFileAttachment;
+                    }
+                }
+            } catch(e) {
+                console.error('selectAttachmentType error:', e);
+            }
+        }
+
+        function handleImageAttachment(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                currentAttachment = {
+                    type: 'image',
+                    name: file.name,
+                    data: event.target.result
+                };
+                const preview = document.getElementById('attachment-image-preview');
+                if(preview) {
+                    preview.innerHTML = `<img src="${event.target.result}" style="max-width:100%; border-radius:8px;">`;
+                }
+                console.log('Image attachment set');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleFileAttachment(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // Convert to base64 for storage
+                const binaryString = event.target.result;
+                let base64 = '';
+                const bytes = new Uint8Array(binaryString);
+                for(let i = 0; i < bytes.byteLength; i++) {
+                    base64 += String.fromCharCode(bytes[i]);
+                }
+                base64 = btoa(base64);
+                
+                currentAttachment = {
+                    type: 'file',
+                    name: file.name,
+                    size: file.size,
+                    mimeType: file.type,
+                    data: base64
+                };
+                const preview = document.getElementById('attachment-file-preview');
+                if(preview) {
+                    preview.innerHTML = `<strong>✓ تم اختيار الملف:</strong> ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                }
+                console.log('File attachment set');
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function clearAttachment() {
+            currentAttachment = null;
+            document.getElementById('attachment-image-section').style.display = 'none';
+            document.getElementById('attachment-link-section').style.display = 'none';
+            document.getElementById('attachment-file-section').style.display = 'none';
+            const imgInput = document.getElementById('attachment-image-input');
+            const fileInput = document.getElementById('attachment-file-input');
+            const linkInput = document.getElementById('attachment-link-input');
+            if(imgInput) imgInput.value = '';
+            if(fileInput) fileInput.value = '';
+            if(linkInput) linkInput.value = '';
+            document.getElementById('attachment-image-preview').innerHTML = '';
+            document.getElementById('attachment-file-preview').innerHTML = '';
+            console.log('Attachment cleared');
+        }
+
         function addAssignment() {
             const text = document.getElementById('new-assignment-text').value;
             console.log('addAssignment called, section=', selectedSection, 'text=', text);
@@ -1660,10 +1830,35 @@
                 const dateInput = document.getElementById('new-assignment-date') ? document.getElementById('new-assignment-date').value : '';
                 const subjInput = document.getElementById('new-assignment-subject') ? document.getElementById('new-assignment-subject').value : '';
                 const dateVal = dateInput ? new Date(dateInput).getTime() : Date.now();
-                appData.assignments[selectedSection].push({ id: Date.now(), text: text, done: false, date: dateVal, subject: subjInput || '' });
+                
+                // Handle attachment
+                let attachment = null;
+                if(currentAttachment) {
+                    attachment = currentAttachment;
+                } else {
+                    const linkInput = document.getElementById('attachment-link-input');
+                    if(linkInput && linkInput.value) {
+                        attachment = {
+                            type: 'link',
+                            url: linkInput.value
+                        };
+                    }
+                }
+
+                const assignmentObj = { 
+                    id: Date.now(), 
+                    text: text, 
+                    done: false, 
+                    date: dateVal, 
+                    subject: subjInput || '',
+                    attachment: attachment
+                };
+                
+                appData.assignments[selectedSection].push(assignmentObj);
                 document.getElementById('new-assignment-text').value = '';
                 if(document.getElementById('new-assignment-date')) document.getElementById('new-assignment-date').value = '';
                 if(document.getElementById('new-assignment-subject')) document.getElementById('new-assignment-subject').value = '';
+                clearAttachment();
                 saveData();
                 render();
                 // تحديث سريع لقائمة الواجبات الحالية
@@ -1678,6 +1873,49 @@
         }
         function updateTaskText(index, val) { appData.assignments[selectedSection][index].text = val; saveData(); render(); }
         function deleteTask(index) { if(confirm('هل أنت متأكد من حذف هذا الواجب؟')) { appData.assignments[selectedSection].splice(index, 1); saveData(); render(); } }
+
+        function viewImage(imageSrc) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:9999;';
+            modal.innerHTML = `
+                <div style="position:relative; max-width:90vw; max-height:90vh;">
+                    <img src="${imageSrc}" style="max-width:100%; max-height:100%; border-radius:8px;">
+                    <button onclick="this.parentElement.parentElement.remove()" style="position:absolute; top:10px; right:10px; background:#fff; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:20px;">✕</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.onclick = function(e) {
+                if(e.target === modal) modal.remove();
+            };
+        }
+
+        function downloadFile(taskIndex, fileName) {
+            const task = appData.assignments[selectedSection][taskIndex];
+            if(!task || !task.attachment || task.attachment.type !== 'file') return;
+            
+            // Convert ArrayBuffer to Blob
+            let data;
+            if(task.attachment.data instanceof ArrayBuffer) {
+                data = new Blob([task.attachment.data]);
+            } else {
+                // If it's a base64 string, convert it
+                const binaryString = atob(task.attachment.data.split(',')[1] || task.attachment.data);
+                const bytes = new Uint8Array(binaryString.length);
+                for(let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                data = new Blob([bytes]);
+            }
+            
+            const url = URL.createObjectURL(data);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
 
         function renderSupport() {
             const container = document.getElementById('support-list');
@@ -2249,6 +2487,12 @@
         window.addImportantLink = addImportantLink;
         window.addTeacher = addTeacher;
         window.addGroupLink = addGroupLink;
+        window.selectAttachmentType = selectAttachmentType;
+        window.clearAttachment = clearAttachment;
+        window.viewImage = viewImage;
+        window.downloadFile = downloadFile;
+        window.handleImageAttachment = handleImageAttachment;
+        window.handleFileAttachment = handleFileAttachment;
 
         
 
