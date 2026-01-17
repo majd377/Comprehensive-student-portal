@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -1085,8 +1085,14 @@
           measurementId: "G-X35BQLF0C2"
         };
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        let db = null; // تعريف عام للمتغير
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            console.log('✅ Firebase initialized successfully');
+        } catch (error) {
+            console.error('❌ Firebase initialization error:', error);
+        }
     </script>
 
     <script>
@@ -1218,41 +1224,75 @@
             // ضع طابعًا زمنيًا لتمييز الحفظ المحلي عن تحديثات المزامنة
             appData.__updated = Date.now();
             lastLocalSave = appData.__updated;
-            db.ref('appData').set(appData, (error) => {
-                if (error) {
-                    alert('حدث خطأ أثناء الحفظ!');
-                }
-            });
+            
+            // حفظ محلي كنسخة احتياطية
+            try {
+                localStorage.setItem('collegeAppData', JSON.stringify(appData));
+                console.log('💾 Data saved locally');
+            } catch(e) {
+                console.error('❌ Error saving to localStorage:', e);
+            }
+            
+            // محاولة حفظ في Firebase
+            if(db && db.ref) {
+                db.ref('appData').set(appData, (error) => {
+                    if (error) {
+                        console.error('❌ Error saving to Firebase:', error);
+                        console.log('✅ But data is saved locally in localStorage');
+                    } else {
+                        console.log('☁️ Data saved to Firebase');
+                    }
+                });
+            } else {
+                console.warn('⚠️ Firebase not initialized, data saved locally only');
+            }
         }
 
         // تحميل البيانات من Firebase عند أي تغيير
-        db.ref('appData').on('value', (snapshot) => {
-            isSyncingFromFirebase = true;
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                // إذا كان التحديث مطابقًا لآخر حفظ محلي، نقوم بالتحديث لكن نتجنب إجراءات إضافية
-                if (data.__updated && data.__updated === lastLocalSave) {
+        if(db && db.ref) {
+            db.ref('appData').on('value', (snapshot) => {
+                isSyncingFromFirebase = true;
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    console.log('📥 Data loaded from Firebase:', data);
+                    // إذا كان التحديث مطابقًا لآخر حفظ محلي، نقوم بالتحديث لكن نتجنب إجراءات إضافية
+                    if (data.__updated && data.__updated === lastLocalSave) {
+                        appData = normalizeAppData(data);
+                        render();
+                        isSyncingFromFirebase = false;
+                        return;
+                    }
                     appData = normalizeAppData(data);
-                    render();
-                    isSyncingFromFirebase = false;
-                    return;
+                } else {
+                    // إذا لم توجد بيانات، استخدم البيانات الافتراضية
+                    console.log('⚠️ No data in Firebase, using default data');
+                    appData = normalizeAppData(defaultData);
+                    saveData();
                 }
-                appData = normalizeAppData(data);
-            } else {
-                // إذا لم توجد بيانات، استخدم البيانات الافتراضية
-                appData = normalizeAppData(defaultData);
-                saveData();
-            }
-            render();
-            isSyncingFromFirebase = false;
-        });
+                render();
+                isSyncingFromFirebase = false;
+            }, (error) => {
+                console.error('❌ Error loading data from Firebase:', error);
+                // Use local storage as fallback
+                console.log('📦 Using localStorage as fallback');
+                appData = normalizeAppData(JSON.parse(localStorage.getItem('collegeAppData')) || defaultData);
+                render();
+            });
 
-        // عند أول تحميل للصفحة، إذا لم توجد بيانات في Firebase، احفظ البيانات الافتراضية
-        db.ref('appData').once('value').then((snapshot) => {
-            if (!snapshot.exists()) {
-                db.ref('appData').set(defaultData);
-            }
-        });
+            // عند أول تحميل للصفحة، إذا لم توجد بيانات في Firebase، احفظ البيانات الافتراضية
+            db.ref('appData').once('value').then((snapshot) => {
+                if (!snapshot.exists()) {
+                    console.log('💾 Initializing Firebase with default data');
+                    db.ref('appData').set(defaultData);
+                }
+            }).catch((error) => {
+                console.error('❌ Error checking Firebase:', error);
+            });
+        } else {
+            console.warn('⚠️ Firebase not initialized, loading from localStorage only');
+            appData = normalizeAppData(JSON.parse(localStorage.getItem('collegeAppData')) || defaultData);
+            // Will not auto-sync from Firebase until it's initialized
+        }
 
         function requestEditMode() {
             // If already in edit mode, just switch back to view (lock it)
@@ -2692,6 +2732,72 @@
                 document.body.style.overflow = '';
             }
         }
+
+        // --- دالة تشخيصية شاملة ---
+        window.diagnose = function() {
+            console.clear();
+            console.log('%c🔍 تقرير التشخيص الشامل', 'font-size:18px; font-weight:bold; color:blue;');
+            console.log('%c=' + '='.repeat(60), 'color:blue;');
+            
+            // 1. Firebase Status
+            console.log('%c📡 حالة Firebase', 'font-size:14px; font-weight:bold; color:green;');
+            try {
+                const testRef = firebase.database().ref('appData');
+                console.log('✅ Firebase Database متصل');
+            } catch(e) {
+                console.error('❌ خطأ في Firebase:', e.message);
+            }
+            
+            // 2. Local Storage Status
+            console.log('%c💾 Local Storage', 'font-size:14px; font-weight:bold; color:green;');
+            const localData = localStorage.getItem('collegeAppData');
+            if(localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    console.log('✅ البيانات موجودة في localStorage');
+                    console.log('📊 عدد الشعب:', parsed.sections || 'غير محدد');
+                    console.log('📚 عدد المواد:', parsed.subjects ? parsed.subjects.length : 0);
+                    console.log('📝 عدد الواجبات:', Object.keys(parsed.assignments || {}).reduce((sum, k) => sum + (parsed.assignments[k] ? parsed.assignments[k].length : 0), 0));
+                } catch(e) {
+                    console.error('❌ خطأ في قراءة localStorage:', e.message);
+                }
+            } else {
+                console.warn('⚠️ لا توجد بيانات في localStorage');
+            }
+            
+            // 3. Current App Data
+            console.log('%c📦 بيانات التطبيق الحالية', 'font-size:14px; font-weight:bold; color:green;');
+            console.log('الشعبة المختارة:', selectedSection);
+            console.log('الصفحة الحالية:', currentView);
+            console.log('وضع التعديل:', isEditMode ? '✅ مفعّل' : '❌ معطّل');
+            
+            // 4. App Data Structure
+            console.log('%c🏗️ هيكل البيانات', 'font-size:14px; font-weight:bold; color:green;');
+            console.log('تقدم الشعبة ' + selectedSection + ':', appData.progress[selectedSection] || 'فارغ');
+            console.log('واجبات الشعبة ' + selectedSection + ':', appData.assignments[selectedSection] || 'فارغ');
+            console.log('روابط الحصص للشعبة ' + selectedSection + ':', appData.liveLinks[selectedSection] || 'فارغ');
+            
+            // 5. Network Status
+            console.log('%c🌐 حالة الاتصال', 'font-size:14px; font-weight:bold; color:green;');
+            console.log('الاتصال بالإنترنت:', navigator.onLine ? '✅ متصل' : '❌ منقطع');
+            
+            // 6. Browser Info
+            console.log('%c🖥️ معلومات المتصفح', 'font-size:14px; font-weight:bold; color:green;');
+            console.log('المتصفح:', navigator.userAgent);
+            
+            console.log('%c=' + '='.repeat(60), 'color:blue;');
+            console.log('%c💡 نصائح:', 'font-size:12px; font-weight:bold;');
+            console.log('- استخدم appData للوصول إلى البيانات الحالية');
+            console.log('- استخدم saveData() لحفظ التغييرات');
+            console.log('- استخدم render() لتحديث الصفحة');
+            console.log('- اكتب diagnose() لتشغيل هذا التقرير مرة أخرى');
+        };
+
+        // تشغيل التشخيص التلقائي عند التحميل
+        console.log('%c⏳ جاري تحميل التطبيق...', 'color:gray; font-size:12px;');
+        setTimeout(() => {
+            console.log('%c✅ تم التحميل بنجاح! اكتب diagnose() في الكونسول للمزيد من المعلومات', 'color:green; font-weight:bold;');
+        }, 500);
 
         // Ensure functions are reachable from inline onclick handlers (debugging helpers)
         window.addAssignment = addAssignment;
