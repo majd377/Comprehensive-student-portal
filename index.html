@@ -761,7 +761,7 @@
                     <p>قائمة الأساتذة مقسمة حسب الشعب</p>
                 </div>
                 <div class="feature-card" onclick="showSection('group-links')">
-                    <div class="feature-icon">🧑‍🤝‍🧑</div>
+                    <div class="feature-icon">🌷</div>
                     <h3>روابط المجموعات</h3>
                     <p>روابط مجموعات جميع الشُعب</p>
                 </div>
@@ -932,6 +932,36 @@
                 <h4>إضافة خبر جديد</h4>
                 <input type="text" id="new-news-title" class="editable-input" placeholder="عنوان الخبر" style="margin-bottom: 10px;">
                 <textarea id="new-news-content" class="editable-textarea" placeholder="محتوى الخبر..." style="min-height: 100px; margin-bottom: 10px;"></textarea>
+                
+                <!-- News Attachment Section -->
+                <div style="margin-top:15px; padding:12px; background:#f0f0f0; border-radius:8px;">
+                    <label style="color:var(--text-light); font-weight:bold;">إضافة ملحق (اختياري):</label>
+                    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn-sm" style="background:#4CAF50; color:white;" onclick="selectNewsAttachmentType('image')">📷 صورة</button>
+                        <button type="button" class="btn-sm" style="background:#2196F3; color:white;" onclick="selectNewsAttachmentType('link')">🔗 رابط</button>
+                        <button type="button" class="btn-sm" style="background:#FF9800; color:white;" onclick="selectNewsAttachmentType('file')">📎 ملف</button>
+                    </div>
+                    
+                    <div id="news-attachment-image-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">اختر صورة:</label>
+                        <input type="file" id="news-attachment-image-input" class="editable-input" accept="image/*" style="margin-bottom:8px;">
+                        <div id="news-attachment-image-preview" style="max-width:150px; margin-top:8px;"></div>
+                    </div>
+                    
+                    <div id="news-attachment-link-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">رابط الملف:</label>
+                        <input type="text" id="news-attachment-link-input" class="editable-input" placeholder="https://...">
+                    </div>
+                    
+                    <div id="news-attachment-file-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">اختر ملف (Word, Excel, PDF, PowerPoint):</label>
+                        <input type="file" id="news-attachment-file-input" class="editable-input" accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx" style="margin-bottom:8px;">
+                        <div id="news-attachment-file-preview" style="font-size:0.85rem; color:var(--text-light); margin-top:8px;"></div>
+                    </div>
+                    
+                    <button type="button" class="btn-sm" style="background:#9C27B0; color:white; margin-top:8px;" onclick="clearNewsAttachment()">✕ إزالة الملحق</button>
+                </div>
+                
                 <button class="btn-sm btn-add" onclick="addNews()">إضافة خبر</button>
             </div>
         </div>
@@ -1062,8 +1092,8 @@
     <script>
         // --- ADMIN CREDENTIALS ---
         // يمكنك تغيير اسم المستخدم وكلمة المرور من هنا
-        const ADMIN_USER = "admin";
-        const ADMIN_PASS = "*100200300*"; // كلمة السر القديمة
+        const ADMIN_USER = "@dmin";
+        const ADMIN_PASS = "@4000030003000@"; // كلمة السر القديمة
 
         // --- DATA INITIALIZATION ---
         const defaultData = {
@@ -2110,6 +2140,139 @@
             render();
         }
 
+        // --- NEWS ATTACHMENT FUNCTIONS ---
+        let currentNewsAttachment = null;
+
+        function selectNewsAttachmentType(type) {
+            console.log('selectNewsAttachmentType called with type:', type);
+            try {
+                const imgSec = document.getElementById('news-attachment-image-section');
+                const linkSec = document.getElementById('news-attachment-link-section');
+                const fileSec = document.getElementById('news-attachment-file-section');
+                
+                if(imgSec) imgSec.style.display = 'none';
+                if(linkSec) linkSec.style.display = 'none';
+                if(fileSec) fileSec.style.display = 'none';
+                
+                if(type === 'image') {
+                    if(imgSec) {
+                        imgSec.style.display = 'block';
+                        console.log('News image section shown');
+                    }
+                    const imgInput = document.getElementById('news-attachment-image-input');
+                    if(imgInput) {
+                        imgInput.onchange = handleNewsImageAttachment;
+                    }
+                } else if(type === 'link') {
+                    if(linkSec) {
+                        linkSec.style.display = 'block';
+                        console.log('News link section shown');
+                    }
+                } else if(type === 'file') {
+                    if(fileSec) {
+                        fileSec.style.display = 'block';
+                        console.log('News file section shown');
+                    }
+                    const fileInput = document.getElementById('news-attachment-file-input');
+                    if(fileInput) {
+                        fileInput.onchange = handleNewsFileAttachment;
+                    }
+                }
+            } catch(e) {
+                console.error('selectNewsAttachmentType error:', e);
+            }
+        }
+
+        function handleNewsImageAttachment(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                currentNewsAttachment = {
+                    type: 'image',
+                    name: file.name,
+                    data: event.target.result
+                };
+                const preview = document.getElementById('news-attachment-image-preview');
+                if(preview) {
+                    preview.innerHTML = `<img src="${event.target.result}" style="max-width:100%; border-radius:8px;">`;
+                }
+                console.log('News image attachment set');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleNewsFileAttachment(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const binaryString = event.target.result;
+                let base64 = '';
+                const bytes = new Uint8Array(binaryString);
+                for(let i = 0; i < bytes.byteLength; i++) {
+                    base64 += String.fromCharCode(bytes[i]);
+                }
+                base64 = btoa(base64);
+                
+                currentNewsAttachment = {
+                    type: 'file',
+                    name: file.name,
+                    size: file.size,
+                    mimeType: file.type,
+                    data: base64
+                };
+                const preview = document.getElementById('news-attachment-file-preview');
+                if(preview) {
+                    preview.innerHTML = `<strong>✓ تم اختيار الملف:</strong> ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                }
+                console.log('News file attachment set');
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function clearNewsAttachment() {
+            currentNewsAttachment = null;
+            document.getElementById('news-attachment-image-section').style.display = 'none';
+            document.getElementById('news-attachment-link-section').style.display = 'none';
+            document.getElementById('news-attachment-file-section').style.display = 'none';
+            const imgInput = document.getElementById('news-attachment-image-input');
+            const fileInput = document.getElementById('news-attachment-file-input');
+            const linkInput = document.getElementById('news-attachment-link-input');
+            if(imgInput) imgInput.value = '';
+            if(fileInput) fileInput.value = '';
+            if(linkInput) linkInput.value = '';
+            document.getElementById('news-attachment-image-preview').innerHTML = '';
+            document.getElementById('news-attachment-file-preview').innerHTML = '';
+            console.log('News attachment cleared');
+        }
+
+        function downloadNewsFile(newsIndex, fileName) {
+            const news = appData.news[newsIndex];
+            if(!news || !news.attachment || news.attachment.type !== 'file') return;
+            
+            let data;
+            if(news.attachment.data instanceof ArrayBuffer) {
+                data = new Blob([news.attachment.data]);
+            } else {
+                const binaryString = atob(news.attachment.data.split(',')[1] || news.attachment.data);
+                const bytes = new Uint8Array(binaryString.length);
+                for(let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                data = new Blob([bytes]);
+            }
+            
+            const url = URL.createObjectURL(data);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
         // --- NEWS FUNCTIONS ---
         function renderNews() {
             const container = document.getElementById('news-list');
@@ -2121,12 +2284,42 @@
             appData.news.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'data-card';
+                
+                // Attachment HTML
+                let attachmentHtml = '';
+                if(item.attachment) {
+                    if(item.attachment.type === 'image') {
+                        attachmentHtml = `
+                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                <strong style="color:#666; font-size:0.9rem;">📷 صورة:</strong>
+                                <img src="${item.attachment.data}" style="max-width:100%; max-height:200px; border-radius:6px; margin-top:6px; cursor:pointer;" onclick="viewImage('${item.attachment.data.replace(/'/g, "\\'")}')" >
+                            </div>
+                        `;
+                    } else if(item.attachment.type === 'link') {
+                        attachmentHtml = `
+                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                <strong style="color:#666; font-size:0.9rem;">🔗 رابط:</strong>
+                                <a href="${item.attachment.url}" target="_blank" style="display:inline-block; margin-right:8px; color:#0066cc; text-decoration:none;">فتح الرابط</a>
+                            </div>
+                        `;
+                    } else if(item.attachment.type === 'file') {
+                        attachmentHtml = `
+                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                <strong style="color:#666; font-size:0.9rem;">📎 ملف:</strong>
+                                <button class="btn-sm" style="background:#FF6B6B; color:white; margin-right:8px;" onclick="downloadNewsFile(${index}, '${item.attachment.name}')">⬇️ تحميل</button>
+                                <span style="color:#999; font-size:0.85rem;">${item.attachment.name}</span>
+                            </div>
+                        `;
+                    }
+                }
+                
                 div.innerHTML = `
                     <div class="data-header">
                         <h3 class="editable-value">${item.title}</h3>
                         <button class="btn-sm btn-delete" onclick="deleteNews(${index})">حذف</button>
                     </div>
                     <p class="editable-value" style="color:var(--text-light); margin-bottom:10px;">${item.content}</p>
+                    ${attachmentHtml}
                     <div class="editable-field">
                         <label>العنوان:</label>
                         <input class="editable-input" value="${item.title}" onchange="updateNews(${index}, 'title', this.value)" style="margin-bottom: 10px;">
@@ -2141,11 +2334,34 @@
             const title = document.getElementById('new-news-title').value;
             const content = document.getElementById('new-news-content').value;
             if(title && content) {
-                appData.news.push({ id: Date.now(), title, content });
+                // Handle attachment
+                let attachment = null;
+                if(currentNewsAttachment) {
+                    attachment = currentNewsAttachment;
+                } else {
+                    const linkInput = document.getElementById('news-attachment-link-input');
+                    if(linkInput && linkInput.value) {
+                        attachment = {
+                            type: 'link',
+                            url: linkInput.value
+                        };
+                    }
+                }
+                
+                const newsObj = {
+                    id: Date.now(),
+                    title: title,
+                    content: content,
+                    attachment: attachment
+                };
+                
+                appData.news.push(newsObj);
                 document.getElementById('new-news-title').value = '';
                 document.getElementById('new-news-content').value = '';
+                clearNewsAttachment();
                 saveData();
                 render();
+                try { renderNews(); } catch(e) { console.warn('renderNews error', e); }
             }
         }
         function updateNews(index, key, val) { appData.news[index][key] = val; saveData(); render(); }
@@ -2493,6 +2709,11 @@
         window.downloadFile = downloadFile;
         window.handleImageAttachment = handleImageAttachment;
         window.handleFileAttachment = handleFileAttachment;
+        window.selectNewsAttachmentType = selectNewsAttachmentType;
+        window.clearNewsAttachment = clearNewsAttachment;
+        window.downloadNewsFile = downloadNewsFile;
+        window.handleNewsImageAttachment = handleNewsImageAttachment;
+        window.handleNewsFileAttachment = handleNewsFileAttachment;
 
         
 
