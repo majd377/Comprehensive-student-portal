@@ -1,13 +1,13 @@
 {
-  "name": "عالَــم النًّــبـلاء",
-  "short_name": "النبلاء",
+  "name": "منصة عالَــم النًّــبـلاء",
+  "short_name": "عالَــم النًّــبـلاء",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#fff9ef",
   "theme_color": "#000000",
   "lang": "ar",
   "icons": [
-    { "src": "لوجو.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "لوجو.png", "sizes": "200x200", "type": "image/png" },
     { "src": "لوجو.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
