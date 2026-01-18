@@ -4,7 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- PWA manifest and theme -->
-    <link rel="manifest" href="manifest.json">
+    <!-- Inject manifest only when served over http(s)/localhost to avoid file:// CORS errors -->
+    <script>
+        (function(){
+            try {
+                if (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                    var link = document.createElement('link');
+                    link.rel = 'manifest';
+                    link.href = 'manifest.json';
+                    document.head.appendChild(link);
+                } else {
+                    console.info('Manifest injection skipped for protocol', location.protocol);
+                }
+            } catch (e) {
+                console.warn('Error injecting manifest:', e);
+            }
+        })();
+    </script>
     <meta name="theme-color" content="#000000">
     <link rel="apple-touch-icon" href="لوجو.png">
     <!-- أضف قبل </head> -->
@@ -253,6 +269,10 @@
         .admin-toggle.active {
             background-color: var(--accent-color);
         }
+
+        /* Manage subjects button: visible only in edit-mode */
+        .manage-subjects-btn { display: none; }
+        body.edit-mode .manage-subjects-btn { display: inline-flex; }
 
         /* Sections Grid (Home) - centered layout so partial rows are centered */
         .dashboard-grid {
@@ -706,6 +726,7 @@
             <button class="admin-toggle" id="adminBtn" onclick="requestEditMode()">
                 <span id="adminIcon">🔒</span> <span id="adminText">وضع المشاهدة</span>
             </button>
+            <button id="manageSubjectsBtn" class="admin-toggle manage-subjects-btn" style="margin-inline-start:8px; background:#374151;" onclick="openManageSubjects()">إدارة المواد</button>
         </div>
 
         <div id="loginModal" class="modal-overlay">
@@ -1038,9 +1059,15 @@
     <script>
         // --- PWA: register service worker and handle beforeinstallprompt ---
         if('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW register failed', e));
-            });
+            // Service workers require a secure context (https) or localhost.
+            // Don't attempt registration when page is opened via file:// (origin 'null').
+            if (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW register failed', e));
+                });
+            } else {
+                console.info('ServiceWorker registration skipped: insecure origin', location.protocol, location.hostname);
+            }
         }
 
         let deferredPrompt = null;
@@ -1099,12 +1126,12 @@
         // --- ADMIN CREDENTIALS ---
         // يمكنك تغيير اسم المستخدم وكلمة المرور من هنا
         const ADMIN_USER = "@dmin";
-        const ADMIN_PASS = "@4000030003000@"; // كلمة السر القديمة
+        const ADMIN_PASS = "@400300300@"; // كلمة السر القديمة
 
         // --- DATA INITIALIZATION ---
         const defaultData = {
             sections: 13,
-            subjects: ["الرياضيات", "الفيزياء", "الكيمياء", "اللغة العربية", "اللغة الإنجليزية", "علوم الحاسوب", "التربية الإسلامية"],
+            subjects: ["اللغة العربية", "اللغة الإنجليزية", "الرياضيات", "الفيزياء", "الكيمياء", "أحياء"],
             progress: {}, 
             assignments: {},
             recordings: {},
@@ -1157,11 +1184,8 @@
                 if(!defaultData.recordings[i]) defaultData.recordings[i] = [];
                 if(!defaultData.recordingsLinks[i]) defaultData.recordingsLinks[i] = {};
             
-                defaultData.subjects.forEach(sub => {
-                    defaultData.progress[i][sub] = { current: 1, total: 20 };
-                    defaultData.liveLinks[i][sub] = { link: "", from: "", to: "" };
-                    defaultData.recordingsLinks[i][sub] = "";
-                });
+                // Do not pre-populate per-subject progress here. Sections start empty and admin should add subjects to sections.
+                // Keep recordings arrays/objects initialized but without per-subject defaults.
         }
 
         // Normalize appData to ensure required structures exist
@@ -1169,7 +1193,7 @@
             if(!data) return defaultData;
             // basic fallbacks
             if(!data.sections) data.sections = defaultData.sections;
-            if(!data.subjects) data.subjects = defaultData.subjects.slice();
+            if(!Array.isArray(data.subjects)) data.subjects = Array.isArray(defaultData.subjects) ? defaultData.subjects.slice() : [];
             if(!data.progress) data.progress = {};
             if(!data.assignments) data.assignments = {};
             if(!data.liveLinks) data.liveLinks = {};
@@ -1187,7 +1211,8 @@
             if(!data.teachers) data.teachers = {};
             if(!data.groupLinks) data.groupLinks = {};
 
-            // ensure team members have bio
+            // ensure team is an array and team members have bio
+            if(!Array.isArray(data.team)) data.team = Array.isArray(defaultData.team) ? defaultData.team.slice() : [];
             data.team.forEach(m => { if(!m.bio) m.bio = ''; });
 
             // ensure per-section structures
@@ -1199,18 +1224,90 @@
                 if(!data.recordingsLinks[i]) data.recordingsLinks[i] = {};
                 if(!data.teachers[i]) data.teachers[i] = [];
                 if(!data.groupLinks[i]) data.groupLinks[i] = [];
-                data.subjects.forEach(sub => {
-                    if(!data.progress[i][sub]) data.progress[i][sub] = { current: 1, total: 20 };
-                    // normalize liveLinks entry to object with link/from/to
-                    if(!data.liveLinks[i][sub] || typeof data.liveLinks[i][sub] !== 'object') data.liveLinks[i][sub] = { link: "", from: "", to: "" };
-                    if(!data.recordingsLinks[i][sub]) data.recordingsLinks[i][sub] = "";
-                });
+                if(!Array.isArray(data.subjects)) data.subjects = [];
+                // do NOT auto-create per-subject progress entries here; leave section progress empty until admin adds subjects
+                // ensure recordingsLinks is an object but do not populate per-subject keys
             }
 
             return data;
         }
 
+            // Prepare a Firebase-safe copy of appData: convert per-section objects keyed by subject names
+            // into arrays so long subject names won't become DB key paths.
+            function prepareAppDataForFirebase(src) {
+                try {
+                    const data = JSON.parse(JSON.stringify(src || {}));
+                    // work on per-section keys: progress, liveLinks, recordingsLinks
+                    const sections = data.sections || 0;
+                    data.progress = data.progress || {};
+                    data.liveLinks = data.liveLinks || {};
+                    data.recordingsLinks = data.recordingsLinks || {};
+                    for (let i = 1; i <= sections; i++) {
+                        // progress: convert object -> array of { subject, value }
+                        if (data.progress[i] && typeof data.progress[i] === 'object' && !Array.isArray(data.progress[i])) {
+                            const arr = [];
+                            Object.keys(data.progress[i]).forEach(k => {
+                                arr.push({ subject: k, value: data.progress[i][k] });
+                            });
+                            data.progress[i] = arr;
+                        }
+                        // liveLinks: convert object -> array of { subject, value }
+                        if (data.liveLinks[i] && typeof data.liveLinks[i] === 'object' && !Array.isArray(data.liveLinks[i])) {
+                            const arr = [];
+                            Object.keys(data.liveLinks[i]).forEach(k => {
+                                arr.push({ subject: k, value: data.liveLinks[i][k] });
+                            });
+                            data.liveLinks[i] = arr;
+                        }
+                        // recordingsLinks: same treatment
+                        if (data.recordingsLinks[i] && typeof data.recordingsLinks[i] === 'object' && !Array.isArray(data.recordingsLinks[i])) {
+                            const arr = [];
+                            Object.keys(data.recordingsLinks[i]).forEach(k => {
+                                arr.push({ subject: k, value: data.recordingsLinks[i][k] });
+                            });
+                            data.recordingsLinks[i] = arr;
+                        }
+                    }
+                    return data;
+                } catch (e) {
+                    console.warn('prepareAppDataForFirebase failed, falling back to original', e);
+                    return src;
+                }
+            }
+
         let appData = normalizeAppData(JSON.parse(localStorage.getItem('collegeAppData')) || defaultData);
+
+        // If the user still has the original default subjects list, replace it with the new per-subject list.
+        (function migrateDefaultSubjects() {
+            try {
+                const oldDefaults = ["الرياضيات","الفيزياء","الكيمياء","اللغة العربية","اللغة الإنجليزية","علوم الحاسوب","التربية الإسلامية"];
+                const preferred = ["اللغة العربية", "اللغة الإنجليزية", "الرياضيات", "الفيزياء", "الكيمياء", "أحياء"];
+                if(Array.isArray(appData.subjects) && JSON.stringify(appData.subjects) === JSON.stringify(oldDefaults)) {
+                    appData.subjects = preferred.slice();
+                    // ensure per-section progress entries exist for new subjects
+                    for(let i=1;i<=appData.sections;i++) {
+                        if(!appData.progress[i]) appData.progress[i] = {};
+                        preferred.forEach(s => { if(!appData.progress[i][s]) appData.progress[i][s] = { current:1, total:20 }; });
+                    }
+                    saveData();
+                }
+            } catch(e) { console.warn('migrateDefaultSubjects failed', e); }
+        })();
+
+        // Return a cleaned, deduplicated subjects array. Splits entries that contain commas or Arabic commas.
+        function getSubjectsList() {
+            try {
+                const raw = Array.isArray(appData.subjects) ? appData.subjects.slice() : [];
+                const out = [];
+                raw.forEach(item => {
+                    if(!item || typeof item !== 'string') return;
+                    // If someone pasted many subjects into one string, split by comma or Arabic comma
+                    const parts = item.split(/\s*[,،]\s*/).map(s => s.trim()).filter(Boolean);
+                    parts.forEach(p => { if(!out.includes(p)) out.push(p); });
+                });
+                return out;
+            } catch(e) { return Array.isArray(appData.subjects) ? appData.subjects : []; }
+        }
 
         let currentView = 'home';
         let selectedSection = 1;
@@ -1235,7 +1332,29 @@
             
             // محاولة حفظ في Firebase
             if(db && db.ref) {
-                db.ref('appData').set(appData, (error) => {
+                const prepared = prepareAppDataForFirebase(appData);
+                try { console.log('📌 Current in-memory subjects before send:', appData.subjects); } catch(e) {}
+                // mark that we're syncing/writing to Firebase to avoid reacting to the resulting 'value' event
+                isSyncingFromFirebase = true;
+                try {
+                    console.log('🔁 Prepared payload for Firebase:', {
+                        subjects: prepared.subjects,
+                        __updated: prepared.__updated,
+                        sections: prepared.sections,
+                        // show a summary of progress keys per section
+                        progressSummary: (() => {
+                            const s = {};
+                            for (let i = 1; i <= (prepared.sections || 0); i++) {
+                                if (Array.isArray(prepared.progress[i])) s[i] = prepared.progress[i].map(x => x.subject).slice(0,10);
+                            }
+                            return s;
+                        })()
+                    });
+                } catch(e) { console.warn('Could not log prepared payload', e); }
+
+                db.ref('appData').set(prepared, (error) => {
+                    // done writing -> stop ignoring incoming snapshots
+                    isSyncingFromFirebase = false;
                     if (error) {
                         console.error('❌ Error saving to Firebase:', error);
                         console.log('✅ But data is saved locally in localStorage');
@@ -1248,21 +1367,69 @@
             }
         }
 
+        // Restore Firebase-stored format back to in-memory shape (arrays -> objects keyed by subject)
+        function restoreAppDataFromFirebase(src) {
+            try {
+                const data = JSON.parse(JSON.stringify(src || {}));
+                const sections = data.sections || 0;
+                data.progress = data.progress || {};
+                data.liveLinks = data.liveLinks || {};
+                data.recordingsLinks = data.recordingsLinks || {};
+                for (let i = 1; i <= sections; i++) {
+                    // progress: if it's an array, convert back to object
+                    if (Array.isArray(data.progress[i])) {
+                        const obj = {};
+                        data.progress[i].forEach(item => {
+                            if (item && item.subject) obj[item.subject] = item.value || {};
+                        });
+                        data.progress[i] = obj;
+                    }
+                    // liveLinks: array -> object
+                    if (Array.isArray(data.liveLinks[i])) {
+                        const obj = {};
+                        data.liveLinks[i].forEach(item => {
+                            if (item && item.subject) obj[item.subject] = item.value || { link: '', from: '', to: '' };
+                        });
+                        data.liveLinks[i] = obj;
+                    }
+                    // recordingsLinks: array -> object
+                    if (Array.isArray(data.recordingsLinks[i])) {
+                        const obj = {};
+                        data.recordingsLinks[i].forEach(item => {
+                            if (item && item.subject) obj[item.subject] = item.value || '';
+                        });
+                        data.recordingsLinks[i] = obj;
+                    }
+                }
+                return data;
+            } catch (e) {
+                console.warn('restoreAppDataFromFirebase failed, returning original', e);
+                return src;
+            }
+        }
+
         // تحميل البيانات من Firebase عند أي تغيير
         if(db && db.ref) {
             db.ref('appData').on('value', (snapshot) => {
                 isSyncingFromFirebase = true;
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    console.log('📥 Data loaded from Firebase:', data);
-                    // إذا كان التحديث مطابقًا لآخر حفظ محلي، نقوم بالتحديث لكن نتجنب إجراءات إضافية
-                    if (data.__updated && data.__updated === lastLocalSave) {
-                        appData = normalizeAppData(data);
-                        render();
-                        isSyncingFromFirebase = false;
-                        return;
-                    }
-                    appData = normalizeAppData(data);
+                        if (snapshot.exists()) {
+                            const raw = snapshot.val();
+                            const data = restoreAppDataFromFirebase(raw);
+                            console.log('📥 Data loaded from Firebase (restored): __updated=', data.__updated, 'lastLocalSave=', lastLocalSave);
+                            // Ignore older snapshots coming from Firebase that are older than our last local save
+                            if (data.__updated && lastLocalSave && data.__updated < lastLocalSave) {
+                                console.info('Ignoring older Firebase snapshot:', data.__updated, '<', lastLocalSave);
+                                isSyncingFromFirebase = false;
+                                return;
+                            }
+                            // If the snapshot equals our last local save, accept it but avoid extra actions
+                            if (data.__updated && data.__updated === lastLocalSave) {
+                                appData = normalizeAppData(data);
+                                render();
+                                isSyncingFromFirebase = false;
+                                return;
+                            }
+                            appData = normalizeAppData(data);
                 } else {
                     // إذا لم توجد بيانات، استخدم البيانات الافتراضية
                     console.log('⚠️ No data in Firebase, using default data');
@@ -1283,7 +1450,7 @@
             db.ref('appData').once('value').then((snapshot) => {
                 if (!snapshot.exists()) {
                     console.log('💾 Initializing Firebase with default data');
-                    db.ref('appData').set(defaultData);
+                    db.ref('appData').set(prepareAppDataForFirebase(defaultData));
                 }
             }).catch((error) => {
                 console.error('❌ Error checking Firebase:', error);
@@ -1344,6 +1511,97 @@
                 text.innerText = 'وضع المشاهدة';
             }
             render(); 
+        }
+
+        // --- Manage Subjects Modal (admin only) ---
+        function openManageSubjects() {
+            // create modal if not exists
+            if(!document.getElementById('manageSubjectsModal')) {
+                const modal = document.createElement('div');
+                modal.id = 'manageSubjectsModal';
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-box">
+                        <h3>إدارة المواد العامة</h3>
+                        <div id="manage-subjects-list" style="max-height:300px; overflow:auto; text-align:right; margin-bottom:10px;"></div>
+                        <input type="text" id="new-global-subject" class="modal-input" placeholder="أضف مادة جديدة (مثلاً: الرياضيات)">
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+                            <button class="btn-cancel" onclick="closeManageSubjects()">إلغاء</button>
+                            <button class="btn-login" onclick="addGlobalSubject()">إضافة وحفظ</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            renderManageSubjects();
+            document.getElementById('manageSubjectsModal').style.display = 'flex';
+        }
+
+        function closeManageSubjects() {
+            const m = document.getElementById('manageSubjectsModal');
+            if(m) m.style.display = 'none';
+        }
+
+        function renderManageSubjects() {
+            const container = document.getElementById('manage-subjects-list');
+            if(!container) return;
+            const list = getSubjectsList();
+            container.innerHTML = '';
+            list.forEach((s, idx) => {
+                const row = document.createElement('div');
+                row.style.display = 'flex'; row.style.gap = '8px'; row.style.marginBottom = '8px'; row.style.alignItems = 'center';
+                row.innerHTML = `
+                    <input type="text" value="${s}" data-idx="${idx}" class="modal-input" style="flex:1;" onchange="updateGlobalSubject(${idx}, this.value)">
+                    <button class="btn-sm btn-delete" onclick="deleteGlobalSubject(${idx})">حذف</button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addGlobalSubject() {
+            const input = document.getElementById('new-global-subject');
+            if(!input) return;
+            const v = (input.value || '').trim();
+            if(!v) return alert('ادخل اسم المادة');
+            // append to appData.subjects (avoid duplicates)
+            const list = getSubjectsList();
+            if(list.includes(v)) return alert('المادة موجودة مسبقاً');
+            // push into appData.subjects array directly
+            if(!Array.isArray(appData.subjects)) appData.subjects = [];
+            appData.subjects.push(v);
+            saveData();
+            input.value = '';
+            renderManageSubjects();
+            render();
+        }
+
+        function updateGlobalSubject(idx, newVal) {
+            const v = (newVal || '').trim();
+            const list = getSubjectsList();
+            if(!v) return renderManageSubjects();
+            // replace by rebuilding appData.subjects to reflect edited list
+            // Start from cleaned list and apply change
+            const cleaned = getSubjectsList();
+            cleaned[idx] = v;
+            // assign cleaned into appData.subjects
+            appData.subjects = cleaned.slice();
+            saveData();
+            render();
+        }
+
+        function deleteGlobalSubject(idx) {
+            const cleaned = getSubjectsList();
+            if(!confirm('هل تريد حذف المادة نهائياً من القائمة العامة؟')) return;
+            const removed = cleaned.splice(idx,1);
+            appData.subjects = cleaned.slice();
+            // Also remove from per-section progress/liveLinks
+            for(let i=1;i<=appData.sections;i++){
+                if(appData.progress && appData.progress[i]) delete appData.progress[i][removed[0]];
+                if(appData.liveLinks && appData.liveLinks[i]) delete appData.liveLinks[i][removed[0]];
+            }
+            saveData();
+            renderManageSubjects();
+            render();
         }
 
         // --- NAVIGATION ---
@@ -1490,8 +1748,8 @@
             // Add control to attach existing global subjects to this section
             const addBox = document.createElement('div');
             addBox.className = 'add-new-container';
-            // available subjects are those in appData.subjects not present in this section
-            const available = appData.subjects.filter(s => !subjectsInSection.includes(s));
+            // available subjects are those in the normalized subjects list not present in this section
+            const available = getSubjectsList().filter(s => !subjectsInSection.includes(s));
             let optionsHtml = '';
             available.forEach(a => { optionsHtml += `<option value="${a}">${a}</option>`; });
             addBox.innerHTML = `
@@ -1545,11 +1803,11 @@
             const dateEl = document.getElementById('assign-filter-date');
             const subjEl = document.getElementById('assign-filter-subject');
             const mode = modeEl ? modeEl.value : 'all';
-            // populate subject filters from appData.subjects
+                // populate subject filters from normalized subjects list
             if(subjEl) {
                 const prev = subjEl.value || 'all';
                 let opts = '<option value="all">كل المواد</option>';
-                (appData.subjects || []).forEach(s => { opts += `<option value="${s}">${s}</option>`; });
+                getSubjectsList().forEach(s => { opts += `<option value="${s}">${s}</option>`; });
                 subjEl.innerHTML = opts;
                 subjEl.value = prev;
             }
@@ -1557,7 +1815,7 @@
             const newSubEl = document.getElementById('new-assignment-subject');
             if(newSubEl) {
                 let opts2 = '<option value="">--- اختر مادة ---</option>';
-                (appData.subjects || []).forEach(s => { opts2 += `<option value="${s}">${s}</option>`; });
+                getSubjectsList().forEach(s => { opts2 += `<option value="${s}">${s}</option>`; });
                 newSubEl.innerHTML = opts2;
             }
             if(mode === 'date') {
@@ -1668,7 +1926,7 @@
             if(subjEl) {
                 const prev = subjEl.value || 'all';
                 let opts = '<option value="all">كل المواد</option>';
-                (appData.subjects || []).forEach(s => { opts += `<option value="${s}">${s}</option>`; });
+                getSubjectsList().forEach(s => { opts += `<option value="${s}">${s}</option>`; });
                 subjEl.innerHTML = opts;
                 subjEl.value = prev;
             }
@@ -1677,7 +1935,7 @@
             const newSubEl = document.getElementById('new-record-subject');
             if(newSubEl) {
                 let opts2 = '<option value="">--- اختر مادة ---</option>';
-                (appData.subjects || []).forEach(s => { opts2 += `<option value="${s}">${s}</option>`; });
+                getSubjectsList().forEach(s => { opts2 += `<option value="${s}">${s}</option>`; });
                 newSubEl.innerHTML = opts2;
             }
 
@@ -2089,54 +2347,115 @@
             const container = document.getElementById('live-list');
             container.innerHTML = '';
             const links = appData.liveLinks[selectedSection] || {};
-            // Add quick controls: add new subject
-            appData.subjects.forEach(sub => {
+            // If there are existing entries for this section, list them (allow renaming)
+            const keys = Object.keys(links);
+            if(keys.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-light); text-align:center;">لا توجد روابط مسجلة لهذه الشعبة حالياً. أضف مادة جديدة أدناه.</p>';
+            }
+
+            keys.forEach(sub => {
                 const entry = links[sub] && typeof links[sub] === 'object' ? links[sub] : { link: '', from: '', to: '' };
                 const div = document.createElement('div');
                 div.className = 'data-card';
                 div.innerHTML = `
                     <div class="data-header">
-                        <h3>${sub}</h3>
+                        <h3 class="lesson-name">${sub}</h3>
                         ${entry.link ? `<a href="${entry.link}" target="_blank" class="btn-link editable-value">دخول الحصة 🎉</a>` : '<span class="editable-value" style="color:gray">لا يوجد رابط</span>'}
+                        ${entry.note ? `<div class="editable-value" style="color:var(--text-light); margin-top:6px;">${entry.note}</div>` : ''}
                         <p class="editable-value session-info">موعد الحصة: ${entry.from ? formatTime12(entry.from) : '--'} إلى ${entry.to ? formatTime12(entry.to) : '--'}</p>
                     </div>
                     <div class="editable-field">
-                        <label>رابط الحصة (Teams):</label>
-                        <input type="text" class="editable-input" value="${entry.link}" placeholder="الصق الرابط هنا" onchange="updateLiveLink('${sub}', 'link', this.value)">
+                        <label>اسم المادة:</label>
+                        <input type="text" class="editable-input" value="${sub}" onchange="renameLiveSubject('${escapeForJs(sub)}', this.value)">
+                        <label style="margin-top:8px;">رابط الحصة:</label>
+                        <input type="text" class="editable-input" value="${entry.link}" placeholder="الصق الرابط هنا" onchange="updateLiveLink('${escapeForJs(sub)}', 'link', this.value)">
+                        <label style="margin-top:8px;">ملاحظة عن الحصة (اختياري):</label>
+                        <textarea class="editable-input" onchange="updateLiveLink('${escapeForJs(sub)}', 'note', this.value)" style="min-height:60px;">${entry.note || ''}</textarea>
                         <div style="display:flex; gap:10px; margin-top:8px;">
                             <div style="flex:1">
                                 <label>من:</label>
-                                <input type="time" class="editable-input" value="${entry.from}" onchange="updateLiveLink('${sub}', 'from', this.value)">
+                                <input type="time" class="editable-input" value="${entry.from}" onchange="updateLiveLink('${escapeForJs(sub)}', 'from', this.value)">
                             </div>
                             <div style="flex:1">
                                 <label>إلى:</label>
-                                <input type="time" class="editable-input" value="${entry.to}" onchange="updateLiveLink('${sub}', 'to', this.value)">
+                                <input type="time" class="editable-input" value="${entry.to}" onchange="updateLiveLink('${escapeForJs(sub)}', 'to', this.value)">
                             </div>
                         </div>
                         <div style="margin-top:8px; display:flex; gap:8px;">
-                            <button class="btn-sm btn-delete" onclick="deleteLiveLink('${sub}')">حذف رابط الشعبة</button>
-                            <button class="btn-sm btn-delete" onclick="deleteSubject('${sub}')">حذف المادة نهائياً</button>
+                            <button class="btn-sm btn-delete" onclick="deleteLiveEntry('${escapeForJs(sub)}')">حذف هذه المادة من الشعبة</button>
                         </div>
                     </div>
                 `;
                 container.appendChild(div);
             });
-            // add-new-container for adding a new subject in live-links
+
+            // add-new-container for adding a new live entry in this section
             const addBox = document.createElement('div');
             addBox.className = 'add-new-container';
-            addBox.innerHTML = `
-                <h4>إضافة مادة جديدة</h4>
-                <input type="text" id="new-subject-name" class="editable-input" placeholder="اسم المادة الجديدة" style="margin-bottom:8px;">
-                <button class="btn-sm btn-add" onclick="addSubject()">إضافة مادة</button>
+                addBox.innerHTML = `
+                <h4>إضافة رابط حصّة جديد</h4>
+                <input type="text" id="new-live-subject" class="editable-input" placeholder="اسم المادة (مثلاً: الرياضيات)" style="margin-bottom:8px;">
+                <input type="text" id="new-live-link" class="editable-input" placeholder="رابط الحصة (https://...)" style="margin-bottom:8px;">
+                <label style="margin-top:6px;">ملاحظة عن الحصة (اختياري):</label>
+                <input type="text" id="new-live-note" class="editable-input" placeholder="اكتب ملاحظة قصيرة هنا" style="margin-bottom:8px;">
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <input type="time" id="new-live-from" class="editable-input" style="flex:1">
+                    <input type="time" id="new-live-to" class="editable-input" style="flex:1">
+                </div>
+                <button class="btn-sm btn-add" onclick="addLiveEntry()">إضافة</button>
             `;
             container.appendChild(addBox);
+        }
+        
+        // helper to safely escape subject names used inside inline event handlers
+        function escapeForJs(s) {
+            return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\"/g, '\\"');
         }
         function updateLiveLink(subject, key, val) {
             if(!appData.liveLinks[selectedSection]) appData.liveLinks[selectedSection] = {};
             let cur = appData.liveLinks[selectedSection][subject];
-            if(!cur || typeof cur !== 'object') cur = { link: '', from: '', to: '' };
+            if(!cur || typeof cur !== 'object') cur = { link: '', from: '', to: '', note: '' };
             cur[key] = val;
             appData.liveLinks[selectedSection][subject] = cur;
+            saveData();
+            render();
+        }
+
+        function addLiveEntry() {
+            const name = (document.getElementById('new-live-subject') || {}).value || '';
+            const link = (document.getElementById('new-live-link') || {}).value || '';
+            const note = (document.getElementById('new-live-note') || {}).value || '';
+            const from = (document.getElementById('new-live-from') || {}).value || '';
+            const to = (document.getElementById('new-live-to') || {}).value || '';
+            const subject = name.trim();
+            if(!subject) { alert('ادخل اسم المادة أولاً'); return; }
+            if(!appData.liveLinks[selectedSection]) appData.liveLinks[selectedSection] = {};
+            if(appData.liveLinks[selectedSection][subject]) {
+                if(!confirm('هناك مادة بنفس الاسم في الشعبة الحالية. هل تريد استبدالها؟')) return;
+            }
+            appData.liveLinks[selectedSection][subject] = { link: link.trim(), from: from, to: to, note: note.trim() };
+            saveData();
+            render();
+            // Clear inputs
+            try { document.getElementById('new-live-subject').value = ''; document.getElementById('new-live-link').value = ''; document.getElementById('new-live-note').value = ''; document.getElementById('new-live-from').value = ''; document.getElementById('new-live-to').value = ''; } catch(e) {}
+        }
+
+        function renameLiveSubject(oldName, newName) {
+            const newN = (newName || '').trim();
+            if(!newN) { alert('اسم المادة لا يمكن أن يكون فارغاً'); render(); return; }
+            if(!appData.liveLinks[selectedSection] || !appData.liveLinks[selectedSection][oldName]) { render(); return; }
+            if(oldName === newN) return;
+            if(appData.liveLinks[selectedSection][newN]) { alert('هناك مادة بنفس الاسم موجودة بالفعل في هذه الشعبة'); render(); return; }
+            appData.liveLinks[selectedSection][newN] = appData.liveLinks[selectedSection][oldName];
+            delete appData.liveLinks[selectedSection][oldName];
+            saveData();
+            render();
+        }
+
+        function deleteLiveEntry(subject) {
+            if(!appData.liveLinks[selectedSection]) appData.liveLinks[selectedSection] = {};
+            if(!confirm('هل تريد حذف هذه المادة من الشعبة الحالية؟')) return;
+            delete appData.liveLinks[selectedSection][subject];
             saveData();
             render();
         }
@@ -2144,7 +2463,8 @@
         function deleteLiveLink(subject) {
             if(!appData.liveLinks[selectedSection]) appData.liveLinks[selectedSection] = {};
             if(confirm('هل تريد حذف رابط هذه المادة في الشعبة الحالية؟')) {
-                appData.liveLinks[selectedSection][subject] = { link: '', from: '', to: '' };
+                // remove the property entirely so it no longer appears in the list
+                try { delete appData.liveLinks[selectedSection][subject]; } catch(e) { appData.liveLinks[selectedSection][subject] = undefined; }
                 saveData();
                 render();
             }
