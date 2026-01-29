@@ -1439,8 +1439,6 @@
                 if(!data.liveLinks[i]) data.liveLinks[i] = {};
                 if(!data.recordings[i]) data.recordings[i] = [];
                 if(!data.recordingsLinks[i]) data.recordingsLinks[i] = {};
-                    if(!data.assignmentFolders) data.assignmentFolders = {};
-                    if(!data.assignmentFolders[i]) data.assignmentFolders[i] = [];
                 if(!data.teachers[i]) data.teachers[i] = [];
                 if(!data.groupLinks[i]) data.groupLinks[i] = [];
                 if(!Array.isArray(data.subjects)) data.subjects = [];
@@ -2244,11 +2242,6 @@
         function renderAssignments() {
             const container = document.getElementById('assignments-list');
             container.innerHTML = '';
-            // folders UI container (insert at top of assignments list)
-            const foldersWrapper = document.createElement('div');
-            foldersWrapper.id = 'assign-folders-container';
-            foldersWrapper.style.marginBottom = '12px';
-            container.appendChild(foldersWrapper);
             let tasks = appData.assignments[selectedSection] || [];
 
             // filter controls
@@ -2296,15 +2289,7 @@
                 tasks = tasks.filter(t => t.subject === selectedSubject);
             }
 
-            // Folder filtering: render folder controls and filter tasks by selected folder
-            const foldersContainer = document.getElementById('assign-folders-container');
-            if(foldersContainer) {
-                renderAssignmentFolders();
-            }
-            const selectedFolder = window._selectedAssignmentFolder || 'all';
-            if(selectedFolder && selectedFolder !== 'all') {
-                tasks = tasks.filter(t => String(t.folderId || '') === String(selectedFolder));
-            }
+            // (folder UI removed)
 
             if(tasks.length === 0) {
                 container.innerHTML = '<p style="color:var(--text-light); text-align:center;">لا يوجد واجبات مسجلة لهذه الشعبة حالياً.</p>';
