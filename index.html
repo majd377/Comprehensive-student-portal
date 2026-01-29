@@ -23,11 +23,26 @@
     </script>
     <meta name="theme-color" content="#000000">
     <link rel="apple-touch-icon" href="لوجو.png">
+    <!-- Open Graph / Social preview tags -->
+    <!-- Replace og:url and image paths with your absolute URL when deploying (recommended) -->
+    <meta property="og:locale" content="ar" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="عالم النبلاء — بوابة الطلاب" />
+    <meta property="og:description" content="بوابة طلابية لإدارة التقدم بالمنهاج، الواجبات، الاختبارات والملحقات." />
+    <meta property="og:url" content="/" />
+    <meta property="og:image" content="لوجو.png" />
+    <meta property="og:image:alt" content="لوجو بوابة الطلاب" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="عالم النبلاء — بوابة الطلاب" />
+    <meta name="twitter:description" content="بوابة طلابية لإدارة التقدم بالمنهاج، الواجبات، الاختبارات والملحقات." />
+    <meta name="twitter:image" content="لوجو.png" />
+    <link rel="image_src" href="لوجو.png" />
     <!-- أضف قبل </head> -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <title>❄ عـــالَمے النُـبـلاءِ || 𝟐𝟎𝟏𝟎 ❄</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lemonada:wght@400;700&display=swap');
         :root {
             --primary-color: #000000;
             --secondary-color: #ceb132;
@@ -40,18 +55,58 @@
             --danger: #ef4444;
             --radius: 10px;
             --shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --base-font-size: 16px;
+            --settings-bg: #ffffff;
         }
 
+        /* Local fonts bundled with the project */
+        @font-face {
+            font-family: 'ALDHABI';
+            src: url('ALDHABI.TTF') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'AlaTypoo';
+            src: url('alfont_com_ArbFONTS-AlaTypoo-Medium.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'DWNOUTSH';
+            src: url('DWNSH2.TTF') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'KFXFTOUT';
+            src: url('KFXFTOUT.TTF') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'PTBLDBRK';
+            src: url('PTBLDBRK.TTF') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: var(--font-family);
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
+            font-size: var(--base-font-size);
             display: flex;
             min-height: 100vh;
         }
@@ -124,11 +179,12 @@
             bottom: 40px;
             transform: translateX(-50%) translateY(8px);
             margin: 0;
-            color: var(--primary-color);
-            font-size: 3rem;
+            color: var(--secondary-color);
+            font-size: 28px;
             opacity: 0;
             z-index: 10002;
             transition: opacity 400ms ease, transform 400ms ease;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
         #splash-text.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -166,7 +222,7 @@
                 transform: scale(90);
             }
             #splash-text {
-                font-size: 1.8rem;
+                font-size: 20px;
                 bottom: 28px;
                 transform: translateX(-50%) translateY(6px);
             }
@@ -213,13 +269,13 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            color: var(--text-light);
+            color: var(--text-color);
             font-weight: 500;
         }
 
         .nav-item:hover, .nav-item.active {
-            background-color: #fffbc2;
-            color: var(--primary-color);
+            background-color: var(--accent-color);
+            color: var(--textLight);
         }
 
         .nav-item svg {
@@ -254,7 +310,7 @@
 
         .admin-toggle {
             background-color: var(--text-color);
-            color: #fffbc2;
+            color: var(--accent-color);
             border: none;
             padding: 10px 20px;
             border-radius: 50px;
@@ -276,15 +332,11 @@
 
         /* Sections Grid (Home) - centered layout so partial rows are centered */
         .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 250px));
+            display: flex;
+            flex-wrap: wrap;
             justify-content: center;
             gap: 20px;
-        }
-
-        /* make dashboard responsive: allow fluid columns on small screens */
-        @media (max-width: 768px) {
-            .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+            width: 100%;
         }
 
         .feature-card {
@@ -295,6 +347,8 @@
             cursor: pointer;
             transition: transform 0.2s;
             border: 2px solid transparent;
+            width: 250px;
+            flex-shrink: 0;
         }
 
         .feature-card:hover {
@@ -302,10 +356,20 @@
             border-color: var(--primary-color);
         }
 
+        /* أزرار الخط والألوان في الإعدادات */
+        .font-choice-btn, .color-scheme-btn {
+            transition: all 0.3s ease;
+        }
+
+        .font-choice-btn:hover, .color-scheme-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
         .feature-icon {
             width: 50px;
             height: 50px;
-            background-color: #fffbc2;
+            background-color: var(--accent-color);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -313,6 +377,7 @@
             color: var(--primary-color);
             margin-bottom: 15px;
             font-size: 1.5rem;
+            opacity: 0.9;
         }
 
         /* Section Selector */
@@ -390,7 +455,7 @@
         /* Progress Bars */
         .progress-container {
             width: 100%;
-            background-color: #e5e7eb;
+            background-color: rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             height: 10px;
             margin-top: 8px;
@@ -409,7 +474,7 @@
             border: 1px dashed var(--accent-color);
             padding: 8px;
             border-radius: 4px;
-            background: #fffbeb;
+            background: rgba(var(--secondary-color), 0.1);
             width: 100%;
             margin-top: 5px;
             font-size: 0.9rem;
@@ -454,7 +519,7 @@
 
         .task-item.completed span {
             text-decoration: line-through;
-            color: #9ca3af;
+            color: var(--text-light);
         }
 
         .task-item input[type="checkbox"] {
@@ -485,11 +550,11 @@
         .task-item .editable-value { display: block; }
 
         .add-new-container {
-            background: #f8fafc;
+            background: rgba(0, 0, 0, 0.05);
             padding: 20px;
             border-radius: var(--radius);
             margin-top: 20px;
-            border: 2px dashed #cbd5e1;
+            border: 2px dashed var(--accent-color);
         }
 
         /* LOGIN MODAL */
@@ -536,7 +601,7 @@
         }
 
         .btn-login { background: var(--primary-color); color: white; flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer;}
-        .btn-cancel { background: #e5e7eb; color: #374151; flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer;}
+        .btn-cancel { background: rgba(0, 0, 0, 0.1); color: var(--text-color); flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer;}
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -659,6 +724,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 تسجيلات الحصص
             </li>
+            <li class="nav-item" onclick="showSection('exams')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="2" y1="17" x2="22" y2="17"></line><path d="M6 8h4M14 8h4M6 13h4M14 13h4"></path></svg>
+                الاختبارات
+            </li>
             <li class="nav-item" onclick="showSection('progress')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 التقدم بالمنهج
@@ -694,6 +763,10 @@
             <li class="nav-item" onclick="showSection('news')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                 آخر الأخبار
+            </li>
+            <li class="nav-item" onclick="showSection('settings')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m6.08 0l4.24-4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m6.08 0l4.24 4.24"></path></svg>
+                الإعدادات
             </li>
             <li class="nav-item" onclick="showSection('about-team')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -761,6 +834,11 @@
                     <h3>تسجيلات الحصص</h3>
                     <p>جميع روابط تسجيلات الحصص في مكان واحد على اليوتيوب)</p>
                 </div>
+                <div class="feature-card" onclick="showSection('exams')">
+                    <div class="feature-icon">📋</div>
+                    <h3>الاختبارات</h3>
+                    <p>جدول الاختبارات والملحقات</p>
+                </div>
                 <div class="feature-card" onclick="showSection('progress')">
                     <div class="feature-icon">📊</div>
                     <h3>التقدم بالمنهج</h3>
@@ -800,6 +878,11 @@
                     <div class="feature-icon">📰</div>
                     <h3>آخر الأخبار</h3>
                     <p>تابع أحدث أخبار التعليم لـ جيل 2010</p>
+                </div>
+                <div class="feature-card" onclick="showSection('settings')">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>الإعدادات</h3>
+                    <p>إدارة الإعدادات والخيارات</p>
                 </div>
                 <div class="feature-card" onclick="showSection('about-team')">
                     <div class="feature-icon">🤠</div>
@@ -851,6 +934,55 @@
                 <input type="date" id="new-record-date" class="editable-input" style="margin-bottom:8px;">
                 <button class="btn-sm btn-add" onclick="addRecording()">إضافة تسجيل</button>
                 <div style="margin-top:12px; color:var(--text-light);">ملاحظة: يمكنك إضافة رابط شامل لكل مادة من إعدادات الشعبة أسفل كل قائمة التسجيلات.</div>
+            </div>
+        </div>
+
+        <div id="exams" class="content-area">
+            <button class="btn-link" style="margin-bottom:15px;" onclick="goBack()" id="backBtn">⬅️ رجوع</button>
+            <div class="section-selector" id="exams-sec-selector"></div>
+            <div id="exams-list"></div>
+            <div class="add-new-container">
+                <h4>إضافة اختبار جديد للشعبة الحالية</h4>
+                <input type="text" id="new-exam-title" class="editable-input" placeholder="اسم الاختبار (مثلاً: اختبار الفترة الأولى)" style="margin-bottom:10px;">
+                <label style="margin-top:8px; color:var(--text-light);">المادة (اختياري):</label>
+                <select id="new-exam-subject" class="editable-input" style="margin-bottom:8px;">
+                    <option value="">--- اختر مادة ---</option>
+                </select>
+                <label style="margin-top:8px; color:var(--text-light);">التاريخ (اختياري):</label>
+                <input type="date" id="new-exam-date" class="editable-input" style="margin-bottom:8px;">
+                
+                <!-- Attachment Section -->
+                <div style="margin-top:15px; padding:12px; background:#f0f0f0; border-radius:8px;">
+                    <label style="color:var(--text-light); font-weight:bold;">إضافة ملحقات (اختياري - يمكن أكثر من ملحق):</label>
+                    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn-sm" style="background:#4CAF50; color:white;" onclick="selectExamAttachmentType('image')">📷 صورة</button>
+                        <button type="button" class="btn-sm" style="background:#2196F3; color:white;" onclick="selectExamAttachmentType('link')">🔗 رابط</button>
+                        <button type="button" class="btn-sm" style="background:#FF9800; color:white;" onclick="selectExamAttachmentType('file')">📎 ملف</button>
+                    </div>
+                    
+                    <div id="exam-attachment-image-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">اختر صورة:</label>
+                        <input type="file" id="exam-attachment-image-input" class="editable-input" accept="image/*" style="margin-bottom:8px;">
+                        <div id="exam-attachment-image-preview" style="max-width:150px; margin-top:8px;"></div>
+                    </div>
+                    
+                    <div id="exam-attachment-link-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">رابط الملف:</label>
+                        <input type="text" id="exam-attachment-link-input" class="editable-input" placeholder="https://...">
+                    </div>
+                    
+                    <div id="exam-attachment-file-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">اختر ملف (Word, Excel, PDF, PowerPoint):</label>
+                        <input type="file" id="exam-attachment-file-input" class="editable-input" accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx" style="margin-bottom:8px;">
+                        <div id="exam-attachment-file-preview" style="font-size:0.85rem; color:var(--text-light); margin-top:8px;"></div>
+                    </div>
+                    
+                    <button type="button" class="btn-sm" style="background:#9C27B0; color:white; margin-top:8px;" onclick="clearExamAttachment()">✕ إزالة الملحق الحالي</button>
+                    <button type="button" class="btn-sm" style="background:#06b6d4; color:white; margin-top:8px; margin-inline-start:8px;" onclick="addCurrentExamAttachmentToNew()">➕ أضف الملحق لقائمة الملحقات</button>
+                    <div id="new-exam-attachments-list" style="margin-top:10px;"></div>
+                </div>
+                
+                <button class="btn-sm btn-add" onclick="addExam()">إضافة اختبار</button>
             </div>
         </div>
 
@@ -911,6 +1043,8 @@
                     </div>
                     
                     <button type="button" class="btn-sm" style="background:#9C27B0; color:white; margin-top:8px;" onclick="clearAttachment()">✕ إزالة الملحق</button>
+                    <button type="button" class="btn-sm" style="background:#06b6d4; color:white; margin-top:8px; margin-inline-start:8px;" onclick="addCurrentAttachmentToNewAssignment()">➕ أضف الملحق لقائمة الملحقات</button>
+                    <div id="new-assignment-attachments-list" style="margin-top:10px;"></div>
                 </div>
                 
                 <button class="btn-sm btn-add" onclick="addAssignment()">إضافة واجب</button>
@@ -981,6 +1115,8 @@
                     </div>
                     
                     <button type="button" class="btn-sm" style="background:#9C27B0; color:white; margin-top:8px;" onclick="clearNewsAttachment()">✕ إزالة الملحق</button>
+                    <button type="button" class="btn-sm" style="background:#06b6d4; color:white; margin-top:8px; margin-inline-start:8px;" onclick="addCurrentNewsAttachmentToNew()">➕ أضف الملحق لقائمة الملحقات</button>
+                    <div id="new-news-attachments-list" style="margin-top:10px;"></div>
                 </div>
                 
                 <button class="btn-sm btn-add" onclick="addNews()">إضافة خبر</button>
@@ -1035,7 +1171,84 @@
                 <h4>إضافة رابط مهم جديد</h4>
                 <input type="text" id="new-link-title" class="editable-input" placeholder="اسم الرابط / الموضوع" style="margin-bottom: 10px;">
                 <input type="text" id="new-link-url" class="editable-input" placeholder="الرابط (URL)">
-                <button class="btn-sm btn-add" onclick="addImportantLink()">إضافة رابط</button>
+                <div style="margin-top:12px; padding:8px; background:#f7fafc; border-radius:6px;">
+                    <label style="font-weight:bold; color:var(--text-light);">ملحقات للرابط (اختياري)</label>
+                    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn-sm" style="background:#4CAF50; color:white;" onclick="selectLinkAttachmentType('image')">📷 صورة</button>
+                        <button type="button" class="btn-sm" style="background:#2196F3; color:white;" onclick="selectLinkAttachmentType('link')">🔗 رابط</button>
+                        <button type="button" class="btn-sm" style="background:#FF9800; color:white;" onclick="selectLinkAttachmentType('file')">📎 ملف</button>
+                    </div>
+                    <div id="link-attachment-image-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">اختر صورة:</label>
+                        <input type="file" id="link-attachment-image-input" class="editable-input" accept="image/*" style="margin-bottom:8px;">
+                        <div id="link-attachment-image-preview" style="max-width:150px; margin-top:8px;"></div>
+                    </div>
+                    <div id="link-attachment-link-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">رابط الملحق:</label>
+                        <input type="text" id="link-attachment-link-input" class="editable-input" placeholder="https://...">
+                    </div>
+                    <div id="link-attachment-file-section" style="display:none; margin-top:10px;">
+                        <label style="color:var(--text-light); font-size:0.9rem;">اختر ملف:</label>
+                        <input type="file" id="link-attachment-file-input" class="editable-input" accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx" style="margin-bottom:8px;">
+                        <div id="link-attachment-file-preview" style="font-size:0.85rem; color:var(--text-light); margin-top:8px;"></div>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <button type="button" class="btn-sm" style="background:#06b6d4; color:white;" onclick="addCurrentLinkAttachmentToNew()">➕ أضف الملحق لقائمة الملحقات</button>
+                        <button type="button" class="btn-sm" style="background:#9C27B0; color:white; margin-inline-start:8px;" onclick="clearLinkAttachment()">✕ إزالة الملحق الحالي</button>
+                    </div>
+                    <div id="new-link-attachments-list" style="margin-top:10px;"></div>
+                </div>
+                <button class="btn-sm btn-add" onclick="addImportantLink()" style="margin-top:10px;">إضافة رابط</button>
+            </div>
+        </div>
+
+        <div id="settings" class="content-area">
+            <button class="btn-link" style="margin-bottom:15px;" onclick="goBack()" id="backBtn">⬅️ رجوع</button>
+            
+            <!-- قسم التنسيق والمظهر -->
+            <div style="background:var(--settings-bg); padding:20px; border-radius:10px; box-shadow:var(--shadow); margin-bottom:20px;">
+                <h3 style="margin-bottom:20px; color:var(--primary-color); border-bottom:2px solid var(--accent-color); padding-bottom:10px;">🎨 التنسيق والمظهر</h3>
+                
+                <!-- اختيار الخط -->
+                <div style="margin-bottom:25px;">
+                    <label style="display:block; font-weight:bold; color:var(--primary-color); margin-bottom:10px;">📝 اختر الخط:</label>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px;">
+                        <button onclick="setFont('aldhabi')" id="font-aldhabi-btn" class="font-choice-btn" style="padding:14px; min-height:48px; border:2px solid #ccc; border-radius:8px; cursor:pointer; font-family:'ALDHABI', sans-serif; font-weight:bold; font-size:18px;">ALDHABI</button>
+                        <button onclick="setFont('alatypoo')" id="font-alatypoo-btn" class="font-choice-btn" style="padding:12px; min-height:44px; border:2px solid #ccc; border-radius:8px; cursor:pointer; font-family:'AlaTypoo', sans-serif; font-weight:bold; font-size:16px;">AlaTypoo</button>
+                        <button onclick="setFont('dwnoutsh')" id="font-dwnoutsh-btn" class="font-choice-btn" style="padding:12px; min-height:44px; border:2px solid #ccc; border-radius:8px; cursor:pointer; font-family:'Lemonada', sans-serif; font-weight:bold; font-size:16px;">Lemonada</button>
+                        <button onclick="setFont('kfxftout')" id="font-kfxftout-btn" class="font-choice-btn" style="padding:12px; min-height:44px; border:2px solid #ccc; border-radius:8px; cursor:pointer; font-family:'KFXFTOUT', sans-serif; font-weight:bold; font-size:16px;">KFXFTOUT</button>
+                        <button onclick="setFont('ptbldbrk')" id="font-ptbldbrk-btn" class="font-choice-btn" style="padding:12px; min-height:44px; border:2px solid #ccc; border-radius:8px; cursor:pointer; font-family:'PTBLDBRK', sans-serif; font-weight:bold; font-size:16px;">PTBLDBRK</button>
+                    </div>
+                </div>
+
+                <!-- اختيار اللون -->
+                <div style="margin-bottom:25px;">
+                    <label style="display:block; font-weight:bold; color:var(--primary-color); margin-bottom:10px;">🎯 اختر مخطط الألوان:</label>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px;">
+                        <!-- درجات الأزرق -->
+                        <button onclick="setColorScheme('blue')" id="scheme-blue-btn" class="color-scheme-btn" style="padding:15px; border:3px solid #ccc; border-radius:8px; cursor:pointer; background:linear-gradient(135deg, #e0f2fe 0%, #0ea5e9 100%); font-weight:bold; color:#0c4a6e;">
+                             درجات الأزرق
+                        </button>
+                        <!-- درجات الأخضر -->
+                        <button onclick="setColorScheme('green')" id="scheme-green-btn" class="color-scheme-btn" style="padding:15px; border:3px solid #ccc; border-radius:8px; cursor:pointer; background:linear-gradient(135deg, #dcfce7 0%, #22c55e 100%); font-weight:bold; color:#166534;">
+                             درجات الأخضر
+                        </button>
+                        <!-- درجات البرتقالي (الحالي) -->
+                        <button onclick="setColorScheme('orange')" id="scheme-orange-btn" class="color-scheme-btn" style="padding:15px; border:3px solid #ccc; border-radius:8px; cursor:pointer; background:linear-gradient(135deg, #fed7aa 0%, #fb923c 100%); font-weight:bold; color:#92400e;">
+                             درجات البرتقالي
+                        </button>
+                        <!-- درجات الزهري الفاتح -->
+                        <button onclick="setColorScheme('pink')" id="scheme-pink-btn" class="color-scheme-btn" style="padding:15px; border:3px solid #ccc; border-radius:8px; cursor:pointer; background:linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%); font-weight:bold; color:#831843;">
+                             درجات الزهري
+                        </button>
+                        <!-- الأسود مع الذهبي (فخم) -->
+                        <button onclick="setColorScheme('luxury')" id="scheme-luxury-btn" class="color-scheme-btn" style="padding:15px; border:3px solid #ccc; border-radius:8px; cursor:pointer; background:linear-gradient(135deg, #1f2937 0%, #fbbf24 100%); font-weight:bold; color:#fff;">
+                            درجات الأسود
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ملاحظة الإعدادات أُزيلت بناءً على طلب المستخدم -->
             </div>
         </div>
 
@@ -1134,6 +1347,7 @@
             subjects: ["اللغة العربية", "اللغة الإنجليزية", "الرياضيات", "الفيزياء", "الكيمياء", "أحياء"],
             progress: {}, 
             assignments: {},
+            exams: {},
             recordings: {},
             recordingsLinks: {},
             recordingsChannelLink: "",
@@ -1180,6 +1394,7 @@
         for (let i = 1; i <= defaultData.sections; i++) {
             if(!defaultData.progress[i]) defaultData.progress[i] = {};
             if(!defaultData.assignments[i]) defaultData.assignments[i] = [];
+            if(!defaultData.exams[i]) defaultData.exams[i] = [];
             if(!defaultData.liveLinks[i]) defaultData.liveLinks[i] = {};
                 if(!defaultData.recordings[i]) defaultData.recordings[i] = [];
                 if(!defaultData.recordingsLinks[i]) defaultData.recordingsLinks[i] = {};
@@ -1208,6 +1423,7 @@
             if(!data.team) data.team = defaultData.team.slice();
             if(!data.books) data.books = defaultData.books.slice();
             if(!data.packages) data.packages = defaultData.packages.slice();
+            if(!data.exams) data.exams = {};
             if(!data.teachers) data.teachers = {};
             if(!data.groupLinks) data.groupLinks = {};
 
@@ -1219,9 +1435,12 @@
             for (let i = 1; i <= data.sections; i++) {
                 if(!data.progress[i]) data.progress[i] = {};
                 if(!data.assignments[i]) data.assignments[i] = [];
+                if(!data.exams[i]) data.exams[i] = [];
                 if(!data.liveLinks[i]) data.liveLinks[i] = {};
                 if(!data.recordings[i]) data.recordings[i] = [];
                 if(!data.recordingsLinks[i]) data.recordingsLinks[i] = {};
+                    if(!data.assignmentFolders) data.assignmentFolders = {};
+                    if(!data.assignmentFolders[i]) data.assignmentFolders[i] = [];
                 if(!data.teachers[i]) data.teachers[i] = [];
                 if(!data.groupLinks[i]) data.groupLinks[i] = [];
                 if(!Array.isArray(data.subjects)) data.subjects = [];
@@ -1277,6 +1496,182 @@
 
         let appData = normalizeAppData(JSON.parse(localStorage.getItem('collegeAppData')) || defaultData);
 
+        // --- إعدادات المظهر (Font & Color Scheme) ---
+        // تخزين الإعدادات محليًا فقط (localStorage)
+        const DEFAULT_SETTINGS = {
+            font: 'default',
+            colorScheme: 'orange'
+        };
+
+        // تحميل الإعدادات من localStorage
+        function loadUserSettings() {
+            try {
+                const stored = localStorage.getItem('userSettings');
+                return stored ? JSON.parse(stored) : DEFAULT_SETTINGS;
+            } catch (e) {
+                return DEFAULT_SETTINGS;
+            }
+        }
+
+        // الحصول على الإعدادات الحالية (قبل استدعاء applyStoredSettings)
+        let userSettings = loadUserSettings();
+
+        // تطبيق الخط
+        function setFont(fontName) {
+            const fontMap = {
+                'aldhabi': "'ALDHABI', sans-serif",
+                'alatypoo': "'AlaTypoo', sans-serif",
+                'dwnoutsh': "'Lemonada', sans-serif",
+                'kfxftout': "'KFXFTOUT', sans-serif",
+                'ptbldbrk': "'PTBLDBRK', sans-serif"
+            };
+
+            if(fontMap[fontName]) {
+                // تطبيق الخط عبر CSS variable
+                document.documentElement.style.setProperty('--font-family', fontMap[fontName]);
+                // ضبط أحجام مخصصة: ALDHABI=30px, PTBLDBRK=16px, DWNOUTSH(Lemonada)=16px، الباقي=24px
+                if (fontName === 'aldhabi') {
+                    document.documentElement.style.setProperty('--base-font-size', '30px');
+                } else if (fontName === 'ptbldbrk') {
+                    document.documentElement.style.setProperty('--base-font-size', '16px');
+                } else if (fontName === 'dwnoutsh') {
+                    document.documentElement.style.setProperty('--base-font-size', '16px');
+                } else {
+                    document.documentElement.style.setProperty('--base-font-size', '24px');
+                }
+                userSettings.font = fontName;
+                saveUserSettings(userSettings);
+                updateFontButtons();
+                console.log('✅ تم تغيير الخط إلى:', fontName);
+            }
+        }
+
+        // تطبيق مخطط الألوان
+        function setColorScheme(schemeName) {
+            const colorSchemes = {
+                'blue': {
+                    primary: '#0c4a6e',
+                    secondary: '#0ea5e9',
+                    accent: '#06b6d4',
+                    bg: '#f0f9ff',
+                    card: '#e0f2fe',
+                    text: '#0c4a6e',
+                    textLight: '#475569',
+                    settingsBg: '#ffffff'
+                },
+                'green': {
+                    primary: '#166534',
+                    secondary: '#22c55e',
+                    accent: '#16a34a',
+                    bg: '#f0fdf4',
+                    card: '#dcfce7',
+                    text: '#166534',
+                    textLight: '#4b5563',
+                    settingsBg: '#ffffff'
+                },
+                'orange': {
+                    primary: '#000000',
+                    secondary: '#ceb132',
+                    accent: '#fff3c2',
+                    bg: '#fff9ef',
+                    card: '#ffe8aa',
+                    text: '#000000',
+                    textLight: '#6b7280',
+                    settingsBg: '#ffffff'
+                },
+                'pink': {
+                    primary: '#831843',
+                    secondary: '#ec4899',
+                    accent: '#f472b6',
+                    bg: '#fdf2f8',
+                    card: '#fbcfe8',
+                    text: '#831843',
+                    textLight: '#6b7280',
+                    settingsBg: '#ffffff'
+                },
+                'luxury': {
+                    primary: '#f5ddb0',
+                    secondary: '#f5ddb0',
+                    accent: '#f5ddb0',
+                    bg: '#333333',
+                    card: '#444444',
+                    text: '#000000',
+                    textLight: '#000000',
+                    settingsBg: '#555555'
+                }
+            };
+
+            const scheme = colorSchemes[schemeName];
+            if(scheme) {
+                const root = document.documentElement;
+                root.style.setProperty('--primary-color', scheme.primary);
+                root.style.setProperty('--secondary-color', scheme.secondary);
+                root.style.setProperty('--accent-color', scheme.accent);
+                root.style.setProperty('--bg-color', scheme.bg);
+                root.style.setProperty('--card-bg', scheme.card);
+                root.style.setProperty('--text-color', scheme.text);
+                root.style.setProperty('--text-light', scheme.textLight);
+                root.style.setProperty('--settings-bg', scheme.settingsBg || '#ffffff');
+
+                userSettings.colorScheme = schemeName;
+                saveUserSettings(userSettings);
+                updateColorSchemeButtons();
+                console.log('✅ تم تغيير مخطط الألوان إلى:', schemeName);
+            }
+        }
+
+        // تحديث أزرار الخط (تسليط الضوء على المختار)
+        function updateFontButtons() {
+            const fontButtons = ['font-aldhabi-btn', 'font-alatypoo-btn', 'font-dwnoutsh-btn', 'font-kfxftout-btn', 'font-ptbldbrk-btn'];
+            fontButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                if(btn) {
+                    if(id === `font-${userSettings.font}-btn`) {
+                        btn.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#f59e0b';
+                        btn.style.borderWidth = '3px';
+                        btn.style.background = '#fff5e6';
+                    } else {
+                        btn.style.borderColor = '#ccc';
+                        btn.style.borderWidth = '2px';
+                        btn.style.background = '#fff';
+                    }
+                }
+            });
+        }
+
+        // تحديث أزرار مخطط الألوان
+        function updateColorSchemeButtons() {
+            const schemeButtons = ['scheme-blue-btn', 'scheme-green-btn', 'scheme-orange-btn', 'scheme-pink-btn', 'scheme-luxury-btn'];
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#f59e0b';
+            schemeButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                if(btn) {
+                    if(id === `scheme-${userSettings.colorScheme}-btn`) {
+                        btn.style.borderColor = accentColor;
+                        btn.style.borderWidth = '4px';
+                        btn.style.boxShadow = `0 0 15px ${accentColor}40`;
+                    } else {
+                        btn.style.borderColor = '#ccc';
+                        btn.style.borderWidth = '3px';
+                        btn.style.boxShadow = 'none';
+                    }
+                }
+            });
+        }
+
+        // تطبيق الإعدادات المحفوظة (الخط و الألوان)
+        function applyStoredSettings() {
+            if(userSettings.font) setFont(userSettings.font);
+            if(userSettings.colorScheme) setColorScheme(userSettings.colorScheme);
+            // تحديث الأزرار بعد قليل من التحميل
+            setTimeout(() => {
+                updateFontButtons();
+                updateColorSchemeButtons();
+            }, 100);
+        }
+        
+        applyStoredSettings();
+
         // If the user still has the original default subjects list, replace it with the new per-subject list.
         (function migrateDefaultSubjects() {
             try {
@@ -1314,6 +1709,26 @@
         let isEditMode = false;
         let isSyncingFromFirebase = false; // علم لمنع recursion
         let lastLocalSave = 0; // طابع زمني لآخر حفظ محلي
+
+        // تحميل الإعدادات من localStorage
+        function loadUserSettings() {
+            try {
+                const stored = localStorage.getItem('userSettings');
+                return stored ? JSON.parse(stored) : DEFAULT_SETTINGS;
+            } catch (e) {
+                return DEFAULT_SETTINGS;
+            }
+        }
+
+        // حفظ الإعدادات في localStorage
+        function saveUserSettings(settings) {
+            try {
+                localStorage.setItem('userSettings', JSON.stringify(settings));
+                console.log('✅ إعدادات المستخدم محفوظة:', settings);
+            } catch (e) {
+                console.warn('خطأ في حفظ الإعدادات:', e);
+            }
+        }
 
         // --- استبدال دوال الحفظ والتحميل بـ Firebase ---
         // حفظ البيانات في Firebase
@@ -1624,6 +2039,7 @@
                 'home': 'الرئيسية',
                 'progress': 'الرزم والمنهج',
                 'assignments': 'الواجبات',
+                'exams': 'الاختبارات',
                 'support': 'أرقام الدعم',
                 'summaries': 'الملفات والتلخيصات',
                 'live-links': 'روابط الحصص',
@@ -1633,6 +2049,7 @@
                 'teachers': 'أسماء الأساتذة',
                 'group-links': 'روابط المجموعات',
                 'important-links': 'روابط مهمة',
+                'settings': 'الإعدادات',
                 'about-team': 'فريق التطوير'
             };
             document.getElementById('page-heading').innerText = titles[sectionId];
@@ -1668,6 +2085,7 @@
             if(currentView === 'progress') renderProgress();
             if(currentView === 'recordings') renderRecordings();
             if(currentView === 'assignments') renderAssignments();
+            if(currentView === 'exams') renderExams();
             if(currentView === 'support') renderSupport();
             if(currentView === 'summaries') renderSummaries();
             if(currentView === 'live-links') renderLiveLinks();
@@ -1676,6 +2094,7 @@
             if(currentView === 'news') renderNews();
             if(currentView === 'books-packages') renderBooksPackages();
             if(currentView === 'important-links') renderImportantLinks();
+            if(currentView === 'settings') renderSettings();
             if(currentView === 'about-team') renderTeam();
         }
 
@@ -1686,7 +2105,7 @@
         }
 
         function renderSectionSelectors() {
-            const ids = ['progress-sec-selector', 'record-sec-selector', 'assign-sec-selector', 'live-sec-selector'];
+            const ids = ['progress-sec-selector', 'record-sec-selector', 'assign-sec-selector', 'exams-sec-selector', 'live-sec-selector'];
             // add selectors for teachers and group-links as well
             ids.push('teachers-sec-selector', 'group-sec-selector');
             ids.forEach(id => {
@@ -1741,8 +2160,37 @@
                     <div class="progress-container">
                         <div class="progress-bar" style="width: ${percent}%"></div>
                     </div>
+                    <!-- Attachments for this subject -->
+                    <div style="margin-top:12px;">
+                        <strong style="color:var(--text-light);">ملحقات المادة:</strong>
+                        <div id="progress-attachments-${escapeId(sub)}" style="margin-top:8px;"></div>
+                        ${isEditMode ? `
+                        <div style="margin-top:10px; padding:10px; background:var(--card-bg); border-radius:6px;">
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <button class="btn-sm" onclick="selectProgressAttachmentType('${escapeJs(sub)}','image')">📷 صورة</button>
+                                <button class="btn-sm" onclick="selectProgressAttachmentType('${escapeJs(sub)}','link')">🔗 رابط</button>
+                                <button class="btn-sm" onclick="selectProgressAttachmentType('${escapeJs(sub)}','file')">📎 ملف</button>
+                            </div>
+                            <div id="progress-attach-image-section-${escapeId(sub)}" style="display:none; margin-top:8px;">
+                                <input type="file" id="progress-attachment-image-input-${escapeId(sub)}" accept="image/*">
+                                <div id="progress-attachment-image-preview-${escapeId(sub)}"></div>
+                            </div>
+                            <div id="progress-attach-link-section-${escapeId(sub)}" style="display:none; margin-top:8px;">
+                                <input type="text" id="progress-attachment-link-input-${escapeId(sub)}" class="editable-input" placeholder="https://...">
+                            </div>
+                            <div id="progress-attach-file-section-${escapeId(sub)}" style="display:none; margin-top:8px;">
+                                <input type="file" id="progress-attachment-file-input-${escapeId(sub)}">
+                                <div id="progress-attachment-file-preview-${escapeId(sub)}"></div>
+                            </div>
+                            <div style="margin-top:8px;">
+                                <button class="btn-sm btn-add" onclick="addCurrentProgressAttachmentToSubject('${escapeJs(sub)}')">➕ أضف الملحق</button>
+                            </div>
+                        </div>` : ''}
+                    </div>
                 `;
                 container.appendChild(card);
+                // render existing attachments after card is in DOM
+                try { renderProgressAttachments(sub); } catch(e){ console.warn('renderProgressAttachments error', e); }
             });
 
             // Add control to attach existing global subjects to this section
@@ -1796,6 +2244,11 @@
         function renderAssignments() {
             const container = document.getElementById('assignments-list');
             container.innerHTML = '';
+            // folders UI container (insert at top of assignments list)
+            const foldersWrapper = document.createElement('div');
+            foldersWrapper.id = 'assign-folders-container';
+            foldersWrapper.style.marginBottom = '12px';
+            container.appendChild(foldersWrapper);
             let tasks = appData.assignments[selectedSection] || [];
 
             // filter controls
@@ -1843,10 +2296,21 @@
                 tasks = tasks.filter(t => t.subject === selectedSubject);
             }
 
+            // Folder filtering: render folder controls and filter tasks by selected folder
+            const foldersContainer = document.getElementById('assign-folders-container');
+            if(foldersContainer) {
+                renderAssignmentFolders();
+            }
+            const selectedFolder = window._selectedAssignmentFolder || 'all';
+            if(selectedFolder && selectedFolder !== 'all') {
+                tasks = tasks.filter(t => String(t.folderId || '') === String(selectedFolder));
+            }
+
             if(tasks.length === 0) {
                 container.innerHTML = '<p style="color:var(--text-light); text-align:center;">لا يوجد واجبات مسجلة لهذه الشعبة حالياً.</p>';
                 return;
             }
+
 
             tasks.forEach((task, index) => {
                 const div = document.createElement('div');
@@ -1854,40 +2318,41 @@
                 const dateLabel = task.date ? new Date(task.date).toLocaleDateString('ar-EG') : '';
                 const subjectHtml = task.subject ? `<div class="task-subject">${task.subject}</div>` : '';
                 
-                // Attachment HTML
+                // Attachment(s) HTML (support multiple)
                 let attachmentHtml = '';
-                if(task.attachment) {
-                    if(task.attachment.type === 'image') {
-                        attachmentHtml = `
-                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
-                                <strong style="color:#666; font-size:0.9rem;">📷 صورة:</strong>
-                                <img src="${task.attachment.data}" style="max-width:100%; max-height:200px; border-radius:6px; margin-top:6px; cursor:pointer;" onclick="viewImage('${task.attachment.data}')">
-                            </div>
-                        `;
-                    } else if(task.attachment.type === 'link') {
-                        attachmentHtml = `
-                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
-                                <strong style="color:#666; font-size:0.9rem;">🔗 رابط:</strong>
-                                <a href="${task.attachment.url}" target="_blank" style="display:inline-block; margin-right:8px; color:#0066cc; text-decoration:none;">فتح الرابط</a>
-                            </div>
-                        `;
-                    } else if(task.attachment.type === 'file') {
-                        attachmentHtml = `
-                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
-                                <strong style="color:#666; font-size:0.9rem;">📎 ملف:</strong>
-                                <button class="btn-sm" style="background:#FF6B6B; color:white; margin-right:8px;" onclick="downloadFile('${index}', '${task.attachment.name}')">⬇️ تحميل</button>
-                                <span style="color:#999; font-size:0.85rem;">${task.attachment.name}</span>
-                            </div>
-                        `;
-                    }
+                if(Array.isArray(task.attachments) && task.attachments.length > 0) {
+                    task.attachments.forEach((att, ai) => {
+                        if(att.type === 'image') {
+                            attachmentHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">📷 صورة:</strong>
+                                    <img src="${att.data}" style="max-width:100%; max-height:200px; border-radius:6px; margin-top:6px; cursor:pointer;" onclick="viewImage('${att.data}')">
+                                </div>
+                            `;
+                        } else if(att.type === 'link') {
+                            attachmentHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">🔗 رابط:</strong>
+                                    <a href="${att.url}" target="_blank" style="display:inline-block; margin-right:8px; color:#0066cc; text-decoration:none;">فتح الرابط</a>
+                                </div>
+                            `;
+                        } else if(att.type === 'file') {
+                            attachmentHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">📎 ملف:</strong>
+                                    <button class="btn-sm" style="background:#FF6B6B; color:white; margin-right:8px;" onclick="downloadAttachment('assignment', ${index}, ${ai})">⬇️ تحميل</button>
+                                    <span style="color:#999; font-size:0.85rem;">${att.name || att.url || 'ملف'}</span>
+                                </div>
+                            `;
+                        }
+                    });
                 }
                 
                 div.innerHTML = `
-                    <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${index})">
                     <div style="flex:1">
                         ${subjectHtml}
                         <div class="task-desc"><span class="editable-value">${task.text}</span></div>
-                        ${attachmentHtml}
+                                    ${attachmentHtml}
                         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;"><small style="color:var(--text-light);">${dateLabel}</small></div>
                         <input type="text" class="editable-field editable-input" value="${task.text}" onchange="updateTaskText(${index}, this.value)">
                     </div>
@@ -2042,6 +2507,11 @@
 
         // --- ATTACHMENT FUNCTIONS ---
         let currentAttachment = null;
+        let newAssignmentAttachments = [];
+        let newNewsAttachments = [];
+        let newLinkAttachments = [];
+        let currentLinkAttachment = null;
+        let currentNewsAttachment = null;
 
         function selectAttachmentType(type) {
             console.log('selectAttachmentType called with type:', type);
@@ -2134,6 +2604,46 @@
             reader.readAsArrayBuffer(file);
         }
 
+        // Add the currently prepared attachment into the new-assignment attachments list
+        function addCurrentAttachmentToNewAssignment() {
+            if(!currentAttachment) {
+                // maybe there's a link in the link input
+                const linkInput = document.getElementById('attachment-link-input');
+                if(linkInput && linkInput.value) {
+                    newAssignmentAttachments.push({ type: 'link', url: linkInput.value });
+                    linkInput.value = '';
+                } else {
+                    alert('لا يوجد ملحق جاهز للإضافة');
+                    return;
+                }
+            } else {
+                newAssignmentAttachments.push(currentAttachment);
+                currentAttachment = null;
+            }
+            clearAttachment();
+            renderNewAssignmentAttachmentsList();
+        }
+
+        function renderNewAssignmentAttachmentsList() {
+            const list = document.getElementById('new-assignment-attachments-list');
+            if(!list) return;
+            if(newAssignmentAttachments.length === 0) { list.innerHTML = '<small style="color:var(--text-light);">لا توجد ملحقات مضافة</small>'; return; }
+            list.innerHTML = '';
+            newAssignmentAttachments.forEach((att, idx) => {
+                let html = '';
+                if(att.type === 'image') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><img src="${att.data}" style="max-width:120px; display:block; margin-bottom:6px;"><button class="btn-sm btn-delete" onclick="removeNewAssignmentAttachment(${idx})">إزالة</button></div>`;
+                else if(att.type === 'file') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><strong>${att.name}</strong> <button class="btn-sm" style="background:#FF6B6B; color:#fff; margin-right:8px;" onclick="downloadNewAssignmentFile(${idx})">⬇️ تحميل</button><button class="btn-sm btn-delete" onclick="removeNewAssignmentAttachment(${idx})">إزالة</button></div>`;
+                else if(att.type === 'link') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><a href="${att.url}" target="_blank">${att.url}</a> <button class="btn-sm btn-delete" onclick="removeNewAssignmentAttachment(${idx})">إزالة</button></div>`;
+                const wr = document.createElement('div'); wr.innerHTML = html; list.appendChild(wr);
+            });
+        }
+
+        function removeNewAssignmentAttachment(i) { newAssignmentAttachments.splice(i,1); renderNewAssignmentAttachmentsList(); }
+
+        function downloadNewAssignmentFile(i) {
+            const att = newAssignmentAttachments[i]; if(!att || att.type !== 'file') return; const binaryString = atob(att.data.split(',')[1] || att.data); const bytes = new Uint8Array(binaryString.length); for(let k=0;k<binaryString.length;k++) bytes[k]=binaryString.charCodeAt(k); const blob = new Blob([bytes]); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=att.name || 'file'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        }
+
         function clearAttachment() {
             currentAttachment = null;
             document.getElementById('attachment-image-section').style.display = 'none';
@@ -2150,6 +2660,78 @@
             console.log('Attachment cleared');
         }
 
+        // --- NEWS: support multiple attachments ---
+        // keep currentNewsAttachment (existing) and add array for new news
+        newNewsAttachments = [];
+
+        function addCurrentNewsAttachmentToNew() {
+            if(!currentNewsAttachment) {
+                const linkInput = document.getElementById('news-attachment-link-input');
+                if(linkInput && linkInput.value) {
+                    newNewsAttachments.push({ type: 'link', url: linkInput.value });
+                    linkInput.value = '';
+                } else { alert('لا يوجد ملحق جاهز للإضافة'); return; }
+            } else {
+                newNewsAttachments.push(currentNewsAttachment);
+                currentNewsAttachment = null;
+            }
+            clearNewsAttachment();
+            renderNewNewsAttachmentsList();
+        }
+
+        function renderNewNewsAttachmentsList() {
+            const list = document.getElementById('new-news-attachments-list'); if(!list) return;
+            if(newNewsAttachments.length === 0) { list.innerHTML = '<small style="color:var(--text-light);">لا توجد ملحقات مضافة</small>'; return; }
+            list.innerHTML = '';
+            newNewsAttachments.forEach((att, idx) => {
+                let html = '';
+                if(att.type === 'image') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><img src="${att.data}" style="max-width:120px; display:block; margin-bottom:6px;"><button class="btn-sm btn-delete" onclick="removeNewNewsAttachment(${idx})">إزالة</button></div>`;
+                else if(att.type === 'file') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><strong>${att.name}</strong> <button class="btn-sm" style="background:#FF6B6B; color:#fff; margin-right:8px;" onclick="downloadNewNewsFile(${idx})">⬇️ تحميل</button><button class="btn-sm btn-delete" onclick="removeNewNewsAttachment(${idx})">إزالة</button></div>`;
+                else if(att.type === 'link') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><a href="${att.url}" target="_blank">${att.url}</a> <button class="btn-sm btn-delete" onclick="removeNewNewsAttachment(${idx})">إزالة</button></div>`;
+                const wr = document.createElement('div'); wr.innerHTML = html; list.appendChild(wr);
+            });
+        }
+
+        function removeNewNewsAttachment(i) { newNewsAttachments.splice(i,1); renderNewNewsAttachmentsList(); }
+
+        function downloadNewNewsFile(i) { const att = newNewsAttachments[i]; if(!att || att.type !== 'file') return; const binaryString = atob(att.data.split(',')[1] || att.data); const bytes = new Uint8Array(binaryString.length); for(let k=0;k<binaryString.length;k++) bytes[k]=binaryString.charCodeAt(k); const blob = new Blob([bytes]); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=att.name || 'file'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
+        // --- IMPORTANT LINKS: attachment handlers (link form) ---
+        function selectLinkAttachmentType(type) {
+            try {
+                const imgSec = document.getElementById('link-attachment-image-section');
+                const linkSec = document.getElementById('link-attachment-link-section');
+                const fileSec = document.getElementById('link-attachment-file-section');
+                if(imgSec) imgSec.style.display='none'; if(linkSec) linkSec.style.display='none'; if(fileSec) fileSec.style.display='none';
+                if(type === 'image') { if(imgSec) imgSec.style.display='block'; const imgInput = document.getElementById('link-attachment-image-input'); if(imgInput) imgInput.onchange = handleLinkImageAttachment; }
+                else if(type === 'link') { if(linkSec) linkSec.style.display='block'; }
+                else if(type === 'file') { if(fileSec) fileSec.style.display='block'; const fileInput = document.getElementById('link-attachment-file-input'); if(fileInput) fileInput.onchange = handleLinkFileAttachment; }
+            } catch(e) { console.error('selectLinkAttachmentType error', e); }
+        }
+
+        function handleLinkImageAttachment(e) {
+            const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev){ currentLinkAttachment = { type:'image', name:file.name, data: ev.target.result }; const preview = document.getElementById('link-attachment-image-preview'); if(preview) preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; border-radius:8px;">`; }; reader.readAsDataURL(file);
+        }
+
+        function handleLinkFileAttachment(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev){ const binaryString = ev.target.result; let base64=''; const bytes = new Uint8Array(binaryString); for(let i=0;i<bytes.byteLength;i++) base64 += String.fromCharCode(bytes[i]); base64 = btoa(base64); currentLinkAttachment = { type:'file', name:file.name, size:file.size, mimeType:file.type, data: base64 }; const preview = document.getElementById('link-attachment-file-preview'); if(preview) preview.innerHTML = `<strong>✓ تم اختيار الملف:</strong> ${file.name} (${(file.size/1024).toFixed(2)} KB)`; }; reader.readAsArrayBuffer(file); }
+
+        function clearLinkAttachment() { currentLinkAttachment = null; const imgSec=document.getElementById('link-attachment-image-section'); const linkSec=document.getElementById('link-attachment-link-section'); const fileSec=document.getElementById('link-attachment-file-section'); if(imgSec) imgSec.style.display='none'; if(linkSec) linkSec.style.display='none'; if(fileSec) fileSec.style.display='none'; const ii=document.getElementById('link-attachment-image-input'); const fi=document.getElementById('link-attachment-file-input'); const li=document.getElementById('link-attachment-link-input'); if(ii) ii.value=''; if(fi) fi.value=''; if(li) li.value=''; const ip=document.getElementById('link-attachment-image-preview'); const fp=document.getElementById('link-attachment-file-preview'); if(ip) ip.innerHTML=''; if(fp) fp.innerHTML=''; }
+
+        function addCurrentLinkAttachmentToNew() {
+            if(!currentLinkAttachment) {
+                const linkInput = document.getElementById('link-attachment-link-input');
+                if(linkInput && linkInput.value) { newLinkAttachments.push({ type:'link', url: linkInput.value }); linkInput.value=''; }
+                else { alert('لا يوجد ملحق جاهز للإضافة'); return; }
+            } else { newLinkAttachments.push(currentLinkAttachment); currentLinkAttachment = null; }
+            clearLinkAttachment(); renderNewLinkAttachmentsList();
+        }
+
+        function renderNewLinkAttachmentsList() { const list = document.getElementById('new-link-attachments-list'); if(!list) return; if(newLinkAttachments.length===0){ list.innerHTML = '<small style="color:var(--text-light);">لا توجد ملحقات مضافة</small>'; return; } list.innerHTML=''; newLinkAttachments.forEach((att, idx)=>{ let html=''; if(att.type==='image') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><img src="${att.data}" style="max-width:120px; display:block; margin-bottom:6px;"><button class="btn-sm btn-delete" onclick="removeNewLinkAttachment(${idx})">إزالة</button></div>`; else if(att.type==='file') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><strong>${att.name}</strong> <button class="btn-sm" style="background:#FF6B6B; color:#fff; margin-right:8px;" onclick="downloadNewLinkFile(${idx})">⬇️ تحميل</button><button class="btn-sm btn-delete" onclick="removeNewLinkAttachment(${idx})">إزالة</button></div>`; else if(att.type==='link') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><a href="${att.url}" target="_blank">${att.url}</a> <button class="btn-sm btn-delete" onclick="removeNewLinkAttachment(${idx})">إزالة</button></div>`; const wr=document.createElement('div'); wr.innerHTML=html; list.appendChild(wr); }); }
+
+        function removeNewLinkAttachment(i){ newLinkAttachments.splice(i,1); renderNewLinkAttachmentsList(); }
+
+        function downloadNewLinkFile(i){ const att=newLinkAttachments[i]; if(!att||att.type!=='file')return; const binaryString = atob(att.data.split(',')[1]||att.data); const bytes=new Uint8Array(binaryString.length); for(let k=0;k<binaryString.length;k++) bytes[k]=binaryString.charCodeAt(k); const blob=new Blob([bytes]); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=att.name||'file'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
         function addAssignment() {
             const text = document.getElementById('new-assignment-text').value;
             console.log('addAssignment called, section=', selectedSection, 'text=', text);
@@ -2159,27 +2741,22 @@
                 const subjInput = document.getElementById('new-assignment-subject') ? document.getElementById('new-assignment-subject').value : '';
                 const dateVal = dateInput ? new Date(dateInput).getTime() : Date.now();
                 
-                // Handle attachment
-                let attachment = null;
-                if(currentAttachment) {
-                    attachment = currentAttachment;
-                } else {
-                    const linkInput = document.getElementById('attachment-link-input');
-                    if(linkInput && linkInput.value) {
-                        attachment = {
-                            type: 'link',
-                            url: linkInput.value
-                        };
-                    }
-                }
+                // Handle attachments (multiple)
+                const attachments = (Array.isArray(newAssignmentAttachments) ? newAssignmentAttachments.slice() : []);
+                // if there's still a pending single attachment, include it too
+                if(currentAttachment) { attachments.push(currentAttachment); currentAttachment = null; }
+                const linkInputPending = document.getElementById('attachment-link-input');
+                if(linkInputPending && linkInputPending.value) { attachments.push({ type: 'link', url: linkInputPending.value }); linkInputPending.value = ''; }
 
-                const assignmentObj = { 
-                    id: Date.now(), 
-                    text: text, 
-                    done: false, 
-                    date: dateVal, 
+                const folderId = document.getElementById('new-assignment-folder') ? document.getElementById('new-assignment-folder').value : '';
+                const assignmentObj = {
+                    id: Date.now(),
+                    text: text,
+                    done: false,
+                    date: dateVal,
                     subject: subjInput || '',
-                    attachment: attachment
+                    attachments: attachments,
+                    folderId: folderId || ''
                 };
                 
                 appData.assignments[selectedSection].push(assignmentObj);
@@ -2187,6 +2764,8 @@
                 if(document.getElementById('new-assignment-date')) document.getElementById('new-assignment-date').value = '';
                 if(document.getElementById('new-assignment-subject')) document.getElementById('new-assignment-subject').value = '';
                 clearAttachment();
+                newAssignmentAttachments = [];
+                renderNewAssignmentAttachmentsList();
                 saveData();
                 render();
                 // تحديث سريع لقائمة الواجبات الحالية
@@ -2243,6 +2822,121 @@
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+        }
+
+        // --- Progress attachments support (multiple attachments per subject) ---
+        const currentProgressAttachment = {}; // keyed by subject
+
+        function escapeId(s){ return String(s).replace(/[^a-z0-9]/gi, '_'); }
+        function escapeJs(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+        function selectProgressAttachmentType(subject, type) {
+            const id = escapeId(subject);
+            const imgSec = document.getElementById(`progress-attach-image-section-${id}`);
+            const linkSec = document.getElementById(`progress-attach-link-section-${id}`);
+            const fileSec = document.getElementById(`progress-attach-file-section-${id}`);
+            if(imgSec) imgSec.style.display='none';
+            if(linkSec) linkSec.style.display='none';
+            if(fileSec) fileSec.style.display='none';
+            if(type === 'image') {
+                if(imgSec) imgSec.style.display='block';
+                const inp = document.getElementById(`progress-attachment-image-input-${id}`);
+                if(inp) inp.onchange = function(e){ handleProgressImageAttachment(e, subject); };
+            } else if(type === 'link') {
+                if(linkSec) linkSec.style.display='block';
+            } else if(type === 'file') {
+                if(fileSec) fileSec.style.display='block';
+                const inp = document.getElementById(`progress-attachment-file-input-${id}`);
+                if(inp) inp.onchange = function(e){ handleProgressFileAttachment(e, subject); };
+            }
+        }
+
+        function handleProgressImageAttachment(e, subject) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                currentProgressAttachment[subject] = { type: 'image', name: file.name, data: ev.target.result };
+                const pv = document.getElementById(`progress-attachment-image-preview-${escapeId(subject)}`);
+                if(pv) pv.innerHTML = `<img src="${ev.target.result}" style="max-width:120px; border-radius:6px;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleProgressFileAttachment(e, subject) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                const binary = ev.target.result;
+                let base64 = '';
+                const bytes = new Uint8Array(binary);
+                for(let i=0;i<bytes.byteLength;i++) base64 += String.fromCharCode(bytes[i]);
+                base64 = btoa(base64);
+                currentProgressAttachment[subject] = { type: 'file', name: file.name, size: file.size, mimeType: file.type, data: base64 };
+                const pv = document.getElementById(`progress-attachment-file-preview-${escapeId(subject)}`);
+                if(pv) pv.innerHTML = `<strong>✓ تم اختيار الملف:</strong> ${file.name} (${(file.size/1024).toFixed(2)} KB)`;
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function addCurrentProgressAttachmentToSubject(subject) {
+            if(!appData.progress[selectedSection]) appData.progress[selectedSection] = {};
+            if(!appData.progress[selectedSection][subject]) appData.progress[selectedSection][subject] = { current:0, total:10, lessonName:'' };
+            const attachments = appData.progress[selectedSection][subject].attachments = appData.progress[selectedSection][subject].attachments || [];
+            const id = escapeId(subject);
+            const linkInput = document.getElementById(`progress-attachment-link-input-${id}`);
+            if(!currentProgressAttachment[subject]) {
+                if(linkInput && linkInput.value) {
+                    attachments.push({ type: 'link', url: linkInput.value });
+                    linkInput.value = '';
+                } else {
+                    alert('لا يوجد ملحق جاهز للإضافة'); return;
+                }
+            } else {
+                attachments.push(currentProgressAttachment[subject]);
+                delete currentProgressAttachment[subject];
+            }
+            // clear UI sections
+            const imgSec = document.getElementById(`progress-attach-image-section-${id}`);
+            const linkSec = document.getElementById(`progress-attach-link-section-${id}`);
+            const fileSec = document.getElementById(`progress-attach-file-section-${id}`);
+            if(imgSec) imgSec.style.display='none'; if(linkSec) linkSec.style.display='none'; if(fileSec) fileSec.style.display='none';
+            const imgIn = document.getElementById(`progress-attachment-image-input-${id}`); if(imgIn) imgIn.value='';
+            const fileIn = document.getElementById(`progress-attachment-file-input-${id}`); if(fileIn) fileIn.value='';
+            saveData(); renderProgressAttachments(subject);
+        }
+
+        function renderProgressAttachments(subject) {
+            const id = escapeId(subject);
+            const container = document.getElementById(`progress-attachments-${id}`);
+            if(!container) return;
+            const data = (appData.progress[selectedSection] && appData.progress[selectedSection][subject]) || {};
+            const list = data.attachments || [];
+            if(list.length === 0) { container.innerHTML = '<small style="color:var(--text-light);">لا توجد ملحقات</small>'; return; }
+            container.innerHTML = '';
+            list.forEach((att, idx) => {
+                let html = '';
+                if(att.type === 'image') html = `<div style="display:inline-block; margin:6px; background:#fff; padding:6px; border-radius:6px;"><img src="${att.data}" style="max-width:100px; display:block; margin-bottom:6px;"><div style="text-align:center;"><button class="btn-sm btn-delete" onclick="removeProgressAttachment('${escapeJs(subject)}', ${idx})">إزالة</button></div></div>`;
+                else if(att.type === 'file') html = `<div style="padding:8px; background:#fff; border-radius:6px; margin-bottom:6px;"><strong>${att.name}</strong> <button class="btn-sm" style="background:#FF6B6B; color:#fff; margin-right:8px;" onclick="downloadProgressFile('${escapeJs(subject)}', ${idx})">⬇️ تحميل</button>${isEditMode?`<button class="btn-sm btn-delete" onclick="removeProgressAttachment('${escapeJs(subject)}', ${idx})">إزالة</button>`:''}</div>`;
+                else if(att.type === 'link') html = `<div style="padding:6px; background:#fff; border-radius:6px; margin-bottom:6px;"><a href="${att.url}" target="_blank">${att.url}</a> ${isEditMode?`<button class="btn-sm btn-delete" onclick="removeProgressAttachment('${escapeJs(subject)}', ${idx})">إزالة</button>`:''}</div>`;
+                const wr = document.createElement('div'); wr.innerHTML = html; container.appendChild(wr);
+            });
+        }
+
+        function removeProgressAttachment(subject, idx) {
+            if(!confirm('هل تريد حذف هذا الملحق؟')) return;
+            const data = (appData.progress[selectedSection] && appData.progress[selectedSection][subject]) || {};
+            if(!data.attachments || !Array.isArray(data.attachments)) return;
+            data.attachments.splice(idx,1);
+            saveData(); renderProgressAttachments(subject);
+        }
+
+        function downloadProgressFile(subject, idx) {
+            const data = (appData.progress[selectedSection] && appData.progress[selectedSection][subject]) || {};
+            const att = data.attachments && data.attachments[idx]; if(!att || att.type !== 'file') return;
+            const binaryString = atob(att.data.split(',')[1] || att.data);
+            const bytes = new Uint8Array(binaryString.length);
+            for(let k=0;k<binaryString.length;k++) bytes[k]=binaryString.charCodeAt(k);
+            const blob = new Blob([bytes]); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=att.name||'file'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
         }
 
         function renderSupport() {
@@ -2501,7 +3195,6 @@
         }
 
         // --- NEWS ATTACHMENT FUNCTIONS ---
-        let currentNewsAttachment = null;
 
         function selectNewsAttachmentType(type) {
             console.log('selectNewsAttachmentType called with type:', type);
@@ -2607,32 +3300,30 @@
             console.log('News attachment cleared');
         }
 
-        function downloadNewsFile(newsIndex, fileName) {
-            const news = appData.news[newsIndex];
-            if(!news || !news.attachment || news.attachment.type !== 'file') return;
-            
-            let data;
-            if(news.attachment.data instanceof ArrayBuffer) {
-                data = new Blob([news.attachment.data]);
-            } else {
-                const binaryString = atob(news.attachment.data.split(',')[1] || news.attachment.data);
-                const bytes = new Uint8Array(binaryString.length);
-                for(let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-                data = new Blob([bytes]);
-            }
-            
-            const url = URL.createObjectURL(data);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
+        // Unified downloader for attachments: type = 'assignment' | 'news' | 'important'
+        function downloadAttachment(type, itemIndex, attIndex) {
+            let list = null;
+            if(type === 'assignment') list = appData.assignments[selectedSection];
+            else if(type === 'news') list = appData.news;
+            else if(type === 'important') list = appData.importantLinks;
+            if(!list) return;
+            const item = list[itemIndex];
+            if(!item || !Array.isArray(item.attachments)) return;
+            const att = item.attachments[attIndex];
+            if(!att || att.type !== 'file') return;
 
+            let dataBlob = null;
+            if(att.data instanceof ArrayBuffer) dataBlob = new Blob([att.data]);
+            else {
+                const binaryString = atob(att.data.split(',')[1] || att.data);
+                const bytes = new Uint8Array(binaryString.length);
+                for(let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+                dataBlob = new Blob([bytes]);
+            }
+            const url = URL.createObjectURL(dataBlob);
+            const a = document.createElement('a');
+            a.href = url; a.download = att.name || 'file'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        }
         // --- NEWS FUNCTIONS ---
         function renderNews() {
             const container = document.getElementById('news-list');
@@ -2645,32 +3336,34 @@
                 const div = document.createElement('div');
                 div.className = 'data-card';
                 
-                // Attachment HTML
-                let attachmentHtml = '';
-                if(item.attachment) {
-                    if(item.attachment.type === 'image') {
-                        attachmentHtml = `
-                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
-                                <strong style="color:#666; font-size:0.9rem;">📷 صورة:</strong>
-                                <img src="${item.attachment.data}" style="max-width:100%; max-height:200px; border-radius:6px; margin-top:6px; cursor:pointer;" onclick="viewImage('${item.attachment.data.replace(/'/g, "\\'")}')" >
-                            </div>
-                        `;
-                    } else if(item.attachment.type === 'link') {
-                        attachmentHtml = `
-                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
-                                <strong style="color:#666; font-size:0.9rem;">🔗 رابط:</strong>
-                                <a href="${item.attachment.url}" target="_blank" style="display:inline-block; margin-right:8px; color:#0066cc; text-decoration:none;">فتح الرابط</a>
-                            </div>
-                        `;
-                    } else if(item.attachment.type === 'file') {
-                        attachmentHtml = `
-                            <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
-                                <strong style="color:#666; font-size:0.9rem;">📎 ملف:</strong>
-                                <button class="btn-sm" style="background:#FF6B6B; color:white; margin-right:8px;" onclick="downloadNewsFile(${index}, '${item.attachment.name}')">⬇️ تحميل</button>
-                                <span style="color:#999; font-size:0.85rem;">${item.attachment.name}</span>
-                            </div>
-                        `;
-                    }
+                // Attachments HTML (support multiple)
+                let attachmentsHtml = '';
+                if(Array.isArray(item.attachments) && item.attachments.length > 0) {
+                    item.attachments.forEach((att, ai) => {
+                        if(att.type === 'image') {
+                            attachmentsHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">📷 صورة:</strong>
+                                    <img src="${att.data}" style="max-width:100%; max-height:200px; border-radius:6px; margin-top:6px; cursor:pointer;" onclick="viewImage('${att.data.replace(/'/g, "\\'")}')" >
+                                </div>
+                            `;
+                        } else if(att.type === 'link') {
+                            attachmentsHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">🔗 رابط:</strong>
+                                    <a href="${att.url}" target="_blank" style="display:inline-block; margin-right:8px; color:#0066cc; text-decoration:none;">فتح الرابط</a>
+                                </div>
+                            `;
+                        } else if(att.type === 'file') {
+                            attachmentsHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">📎 ملف:</strong>
+                                    <button class="btn-sm" style="background:#FF6B6B; color:white; margin-right:8px;" onclick="downloadAttachment('news', ${index}, ${ai})">⬇️ تحميل</button>
+                                    <span style="color:#999; font-size:0.85rem;">${att.name || 'ملف'}</span>
+                                </div>
+                            `;
+                        }
+                    });
                 }
                 
                 div.innerHTML = `
@@ -2679,7 +3372,7 @@
                         <button class="btn-sm btn-delete" onclick="deleteNews(${index})">حذف</button>
                     </div>
                     <p class="editable-value" style="color:var(--text-light); margin-bottom:10px;">${item.content}</p>
-                    ${attachmentHtml}
+                    ${attachmentsHtml}
                     <div class="editable-field">
                         <label>العنوان:</label>
                         <input class="editable-input" value="${item.title}" onchange="updateNews(${index}, 'title', this.value)" style="margin-bottom: 10px;">
@@ -2694,31 +3387,25 @@
             const title = document.getElementById('new-news-title').value;
             const content = document.getElementById('new-news-content').value;
             if(title && content) {
-                // Handle attachment
-                let attachment = null;
-                if(currentNewsAttachment) {
-                    attachment = currentNewsAttachment;
-                } else {
-                    const linkInput = document.getElementById('news-attachment-link-input');
-                    if(linkInput && linkInput.value) {
-                        attachment = {
-                            type: 'link',
-                            url: linkInput.value
-                        };
-                    }
-                }
-                
+                // Handle multiple attachments for news
+                const attachments = (Array.isArray(newNewsAttachments) ? newNewsAttachments.slice() : []);
+                if(currentNewsAttachment) { attachments.push(currentNewsAttachment); currentNewsAttachment = null; }
+                const linkInputPending = document.getElementById('news-attachment-link-input');
+                if(linkInputPending && linkInputPending.value) { attachments.push({ type: 'link', url: linkInputPending.value }); linkInputPending.value = ''; }
+
                 const newsObj = {
                     id: Date.now(),
                     title: title,
                     content: content,
-                    attachment: attachment
+                    attachments: attachments
                 };
                 
                 appData.news.push(newsObj);
                 document.getElementById('new-news-title').value = '';
                 document.getElementById('new-news-content').value = '';
                 clearNewsAttachment();
+                newNewsAttachments = [];
+                renderNewNewsAttachmentsList();
                 saveData();
                 render();
                 try { renderNews(); } catch(e) { console.warn('renderNews error', e); }
@@ -2738,6 +3425,37 @@
             appData.importantLinks.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'data-card';
+                
+                // Attachments HTML (support multiple)
+                let attachmentsHtml = '';
+                if(Array.isArray(item.attachments) && item.attachments.length > 0) {
+                    item.attachments.forEach((att, ai) => {
+                        if(att.type === 'image') {
+                            attachmentsHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">📷 صورة:</strong>
+                                    <img src="${att.data}" style="max-width:100%; max-height:200px; border-radius:6px; margin-top:6px; cursor:pointer;" onclick="viewImage('${att.data.replace(/'/g, "\\'")}')" >
+                                </div>
+                            `;
+                        } else if(att.type === 'link') {
+                            attachmentsHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">🔗 رابط:</strong>
+                                    <a href="${att.url}" target="_blank" style="display:inline-block; margin-right:8px; color:#0066cc; text-decoration:none;">فتح الرابط</a>
+                                </div>
+                            `;
+                        } else if(att.type === 'file') {
+                            attachmentsHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">📎 ملف:</strong>
+                                    <button class="btn-sm" style="background:#FF6B6B; color:white; margin-right:8px;" onclick="downloadAttachment('important', ${index}, ${ai})">⬇️ تحميل</button>
+                                    <span style="color:#999; font-size:0.85rem;">${att.name || 'ملف'}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+                
                 div.innerHTML = `
                     <div class="data-header">
                         <div>
@@ -2749,6 +3467,7 @@
                     <div class="editable-field">
                         <input class="editable-input" value="${item.url}" placeholder="الرابط" onchange="updateImportantLink(${index}, 'url', this.value)">
                     </div>
+                    ${attachmentsHtml}
                     <button class="btn-sm btn-delete" onclick="deleteImportantLink(${index})">حذف</button>
                 `;
                 container.appendChild(div);
@@ -2758,9 +3477,16 @@
             const title = document.getElementById('new-link-title').value;
             const url = document.getElementById('new-link-url').value;
             if(title && url) {
-                appData.importantLinks.push({ id: Date.now(), title, url });
+                const attachments = (Array.isArray(newLinkAttachments) ? newLinkAttachments.slice() : []);
+                if(currentLinkAttachment) { attachments.push(currentLinkAttachment); currentLinkAttachment = null; }
+                const linkInputPending = document.getElementById('link-attachment-link-input');
+                if(linkInputPending && linkInputPending.value) { attachments.push({ type: 'link', url: linkInputPending.value }); linkInputPending.value = ''; }
+
+                appData.importantLinks.push({ id: Date.now(), title, url, attachments: attachments });
                 document.getElementById('new-link-title').value = '';
                 document.getElementById('new-link-url').value = '';
+                newLinkAttachments = [];
+                renderNewLinkAttachmentsList();
                 saveData();
                 render();
             }
@@ -2859,6 +3585,13 @@
         function updateGroupLink(index, key, val) { appData.groupLinks[selectedSection][index][key] = val; saveData(); render(); }
         function deleteGroupLink(index) { if(confirm('حذف هذا الرابط؟')) { appData.groupLinks[selectedSection].splice(index, 1); saveData(); render(); } }
 
+        // --- SETTINGS FUNCTIONS ---
+        function renderSettings() {
+            // تحديث أزرار الخط والألوان
+            updateFontButtons();
+            updateColorSchemeButtons();
+        }
+
         // --- TEAM FUNCTIONS ---
         function renderTeam() {
             const container = document.getElementById('team-list');
@@ -2889,6 +3622,196 @@
                 `;
                 container.appendChild(div);
             });
+        }
+
+        // --- EXAMS LOGIC (نفس نظام الواجبات) ---
+        let currentExamAttachment = null;
+        let newExamAttachments = [];
+
+        function selectExamAttachmentType(type) {
+            document.getElementById('exam-attachment-image-section').style.display = type === 'image' ? 'block' : 'none';
+            document.getElementById('exam-attachment-link-section').style.display = type === 'link' ? 'block' : 'none';
+            document.getElementById('exam-attachment-file-section').style.display = type === 'file' ? 'block' : 'none';
+        }
+
+        function clearExamAttachment() {
+            currentExamAttachment = null;
+            document.getElementById('exam-attachment-image-input').value = '';
+            document.getElementById('exam-attachment-link-input').value = '';
+            document.getElementById('exam-attachment-file-input').value = '';
+            document.getElementById('exam-attachment-image-preview').innerHTML = '';
+            document.getElementById('exam-attachment-file-preview').innerHTML = '';
+            ['exam-attachment-image-section', 'exam-attachment-link-section', 'exam-attachment-file-section'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+        }
+
+        function addCurrentExamAttachmentToNew() {
+            const type = document.getElementById('exam-attachment-image-section').style.display !== 'none' ? 'image' :
+                         document.getElementById('exam-attachment-link-section').style.display !== 'none' ? 'link' : 'file';
+            
+            if(type === 'image') {
+                const file = document.getElementById('exam-attachment-image-input').files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        newExamAttachments.push({ type: 'image', data: e.target.result, name: file.name });
+                        clearExamAttachment();
+                        renderNewExamAttachmentsList();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            } else if(type === 'link') {
+                const url = document.getElementById('exam-attachment-link-input').value;
+                if(url) {
+                    newExamAttachments.push({ type: 'link', url: url });
+                    clearExamAttachment();
+                    renderNewExamAttachmentsList();
+                }
+            } else if(type === 'file') {
+                const file = document.getElementById('exam-attachment-file-input').files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        newExamAttachments.push({ type: 'file', data: e.target.result, name: file.name, url: file.name });
+                        clearExamAttachment();
+                        renderNewExamAttachmentsList();
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            }
+        }
+
+        function renderNewExamAttachmentsList() {
+            const container = document.getElementById('new-exam-attachments-list');
+            container.innerHTML = '';
+            newExamAttachments.forEach((att, idx) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding:8px; background:#e8f4f8; border-radius:6px; margin-top:6px; display:flex; justify-content:space-between; align-items:center;';
+                const typeLabel = att.type === 'image' ? '📷 صورة' : att.type === 'link' ? '🔗 رابط' : '📎 ملف';
+                div.innerHTML = `<span>${typeLabel}</span><button type="button" class="btn-sm" style="background:#EF4444; color:white;" onclick="removeExamAttachment(${idx})">إزالة</button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function removeExamAttachment(idx) {
+            newExamAttachments.splice(idx, 1);
+            renderNewExamAttachmentsList();
+        }
+
+        function renderExams() {
+            const container = document.getElementById('exams-list');
+            container.innerHTML = '';
+            let exams = appData.exams[selectedSection] || [];
+
+            // populate the subject chooser in the add-exam form
+            const newSubEl = document.getElementById('new-exam-subject');
+            if(newSubEl) {
+                let opts = '<option value="">--- اختر مادة ---</option>';
+                getSubjectsList().forEach(s => { opts += `<option value="${s}">${s}</option>`; });
+                newSubEl.innerHTML = opts;
+            }
+
+            if(exams.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-light); text-align:center;">لا توجد اختبارات مسجلة لهذه الشعبة حالياً.</p>';
+                return;
+            }
+
+            exams.forEach((exam, index) => {
+                const div = document.createElement('div');
+                div.className = 'task-item';
+                const dateLabel = exam.date ? new Date(exam.date).toLocaleDateString('ar-EG') : '';
+                const subjectHtml = exam.subject ? `<div class="task-subject">${exam.subject}</div>` : '';
+                
+                // Attachments HTML (support multiple)
+                let attachmentHtml = '';
+                if(Array.isArray(exam.attachments) && exam.attachments.length > 0) {
+                    exam.attachments.forEach((att, ai) => {
+                        if(att.type === 'image') {
+                            attachmentHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">📷 صورة:</strong>
+                                    <img src="${att.data}" style="max-width:100%; max-height:200px; border-radius:6px; margin-top:6px; cursor:pointer;" onclick="viewImage('${att.data}')">
+                                </div>
+                            `;
+                        } else if(att.type === 'link') {
+                            attachmentHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">🔗 رابط:</strong>
+                                    <a href="${att.url}" target="_blank" style="display:inline-block; margin-right:8px; color:#0066cc; text-decoration:none;">فتح الرابط</a>
+                                </div>
+                            `;
+                        } else if(att.type === 'file') {
+                            attachmentHtml += `
+                                <div style="margin-top:8px; padding:8px; background:#f5f5f5; border-radius:6px;">
+                                    <strong style="color:#666; font-size:0.9rem;">📎 ملف:</strong>
+                                    <button class="btn-sm" style="background:#FF6B6B; color:white; margin-right:8px;" onclick="downloadAttachment('exam', ${index}, ${ai})">⬇️ تحميل</button>
+                                    <span style="color:#999; font-size:0.85rem;">${att.name || att.url || 'ملف'}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+                
+                div.innerHTML = `
+                    <div style="flex:1">
+                        ${subjectHtml}
+                        <div class="task-desc"><span class="editable-value">${exam.title}</span></div>
+                        ${attachmentHtml}
+                        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;"><small style="color:var(--text-light);">${dateLabel}</small></div>
+                        <input type="text" class="editable-field editable-input" value="${exam.title}" onchange="updateExamTitle(${index}, this.value)">
+                    </div>
+                    <button class="btn-sm btn-delete" onclick="deleteExam(${index})">حذف</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addExam() {
+            const title = document.getElementById('new-exam-title').value;
+            if(title) {
+                if(!appData.exams[selectedSection]) appData.exams[selectedSection] = [];
+                const dateInput = document.getElementById('new-exam-date') ? document.getElementById('new-exam-date').value : '';
+                const subjInput = document.getElementById('new-exam-subject') ? document.getElementById('new-exam-subject').value : '';
+                const dateVal = dateInput ? new Date(dateInput).getTime() : Date.now();
+                
+                // Handle attachments (multiple)
+                const attachments = (Array.isArray(newExamAttachments) ? newExamAttachments.slice() : []);
+                
+                const examObj = {
+                    id: Date.now(),
+                    title: title,
+                    date: dateVal,
+                    subject: subjInput || '',
+                    attachments: attachments
+                };
+                
+                appData.exams[selectedSection].push(examObj);
+                document.getElementById('new-exam-title').value = '';
+                if(document.getElementById('new-exam-date')) document.getElementById('new-exam-date').value = '';
+                if(document.getElementById('new-exam-subject')) document.getElementById('new-exam-subject').value = '';
+                clearExamAttachment();
+                newExamAttachments = [];
+                renderNewExamAttachmentsList();
+                saveData();
+                renderExams();
+            }
+        }
+
+        function updateExamTitle(index, newTitle) {
+            if(appData.exams[selectedSection] && appData.exams[selectedSection][index]) {
+                appData.exams[selectedSection][index].title = newTitle;
+                saveData();
+                renderExams();
+            }
+        }
+
+        function deleteExam(index) {
+            if(confirm('هل تريد حذف هذا الاختبار؟')) {
+                appData.exams[selectedSection].splice(index, 1);
+                saveData();
+                renderExams();
+            }
         }
         function addTeamMember() {
             const name = document.getElementById('new-team-name').value;
